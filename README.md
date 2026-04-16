@@ -1,45 +1,58 @@
-# dotfiles
+# ax-system-basic
 
-个人开发环境配置，Ubuntu 24.04 LTS。
+> 个人开发环境配置，一键部署，多机同步。
 
-## 一键部署
+## 快速开始
 
 ```bash
-git clone git@github.com:你的用户名/dotfiles.git ~/.dotfiles
+git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.dotfiles
 ~/.dotfiles/install.sh
-source ~/.bashrc
+exec zsh
 ```
 
-## 包含内容
+## 实现状态
 
-- **ax** - 自定义命令管理器，支持添加/编辑/删除/搜索/自动补全
-- **WezTerm** - 终端配置（Catppuccin Mocha 主题，tmux 风格快捷键）
-- **bash** - shell 配置 + 补全
-- **Starship** - 漂亮的 prompt
-- **fzf** - 模糊搜索
-- **apt 包列表** - 一键安装常用开发工具
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| ax 命令管理器 | ✅ 完成 | 添加/编辑/删除/执行/自动补全/自动同步 |
+| WezTerm 配置 | ✅ 完成 | Catppuccin Mocha，tmux 风格快捷键 |
+| zsh 配置 | ✅ 完成 | 自动建议、语法高亮、增强补全 |
+| Starship Prompt | ✅ 完成 | 通过 install.sh 安装 |
+| fzf 模糊搜索 | ✅ 完成 | 通过 install.sh 安装 |
+| 一键部署脚本 | ✅ 完成 | install.sh |
+| 命令库远程同步 | ✅ 完成 | add/edit/rm 后自动 commit + push |
+| Git 配置 | 🔲 待配置 | 需要填充 .gitconfig |
+| tmux 配置 | 🔲 待实现 | 预留，后续需要时添加 |
+| Neovim / IDE 配置 | 🔲 待规划 | 按需添加 |
+| 自定义脚本 | 🔲 待规划 | 按需添加 |
 
-## 快捷键 (WezTerm)
+## 仓库结构
 
-Leader: `Ctrl+A`
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Ctrl+A c` | 新标签页 |
-| `Ctrl+A n/p` | 切换标签 |
-| `Ctrl+A \|` | 水平分屏 |
-| `Ctrl+A -` | 垂直分屏 |
-| `Ctrl+A h/j/k/l` | 切换面板 |
-| `Ctrl+A z` | 全屏切换 |
-| `Ctrl+A r` | 重载配置 |
-
-## ax 命令管理
-
-```bash
-ax add <名称> <命令> [描述]    # 添加
-ax edit <名称>                  # 编辑
-ax list                        # 列表
-ax rm <名称>                   # 删除
-ax <名称>                      # 执行
-ax                             # 交互选择
 ```
+ax-system-basic/
+├── install.sh              # 一键部署
+├── apt-packages.txt        # 系统包列表
+├── ax-commands.json        # 自定义命令库（自动同步）
+├── bin/
+│   └── ax                  # 命令管理器
+├── bash/
+│   ├── .zshrc              # zsh 配置
+│   ├── .bashrc             # bash 配置（兼容）
+│   └── completions/
+│       ├── ax              # bash 补全
+│       └── ax.zsh          # zsh 补全
+├── wezterm/
+│   └── wezterm.lua         # 终端配置
+├── git/
+│   └── .gitconfig          # git 配置（待填充）
+└── docs/
+    └── ...                 # 详细文档
+```
+
+## 详细文档
+
+详见 [`docs/`](./docs/) 目录，从 [需求总览](./docs/README.md) 开始。
+
+## 许可
+
+个人使用。
