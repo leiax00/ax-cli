@@ -1,0 +1,20 @@
+# ax bash 补全
+_ax_completions() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local subcmd="${COMP_WORDS[1]}"
+
+  if [ "$COMP_CWORD" -eq 1 ]; then
+    local cmds="add edit list ls rm del help"
+    local saved=$(jq -r 'keys[]' ~/.ax-commands.json 2>/dev/null)
+    COMPREPLY=($(compgen -W "$cmds $saved" -- "$cur"))
+    return
+  fi
+
+  if [ "$subcmd" = "rm" ] || [ "$subcmd" = "del" ] || [ "$subcmd" = "edit" ]; then
+    local saved=$(jq -r 'keys[]' ~/.ax-commands.json 2>/dev/null)
+    COMPREPLY=($(compgen -W "$saved" -- "$cur"))
+    return
+  fi
+}
+
+complete -F _ax_completions ax

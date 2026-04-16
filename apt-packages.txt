@@ -1,0 +1,16 @@
+jq
+fzf
+git
+curl
+wget
+tree
+htop
+ripgrep
+fd-find
+bat
+tmux
+python3-pip
+nodejs
+npm
+docker.io
+docker-compose-v2

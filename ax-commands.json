@@ -1,0 +1,26 @@
+{
+  "esp": {
+    "cmd": "cd ~/esp/esp-idf && . export.sh",
+    "desc": "进入 ESP-IDF 开发环境"
+  },
+  "dcup": {
+    "cmd": "docker compose up -d",
+    "desc": "启动 Docker 容器"
+  },
+  "dcdown": {
+    "cmd": "docker compose down",
+    "desc": "停止 Docker 容器"
+  },
+  "dps": {
+    "cmd": "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'",
+    "desc": "查看运行中的容器"
+  },
+  "lg": {
+    "cmd": "lazygit",
+    "desc": "打开 lazygit"
+  },
+  "clean": {
+    "cmd": "docker system prune -af",
+    "desc": "清理 Docker"
+  }
+}
