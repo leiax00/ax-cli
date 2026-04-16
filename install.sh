@@ -1,5 +1,5 @@
 #!/bin/bash
-# install.sh - 一键部署开发环境
+# install.sh - 一键部署开发环境（zsh 版）
 set -e
 
 DOTDIR="$HOME/.dotfiles"
@@ -19,7 +19,37 @@ echo "📦 安装系统包..."
 sudo apt update
 sudo apt install -y $(cat "$DOTDIR/apt-packages.txt")
 
-# 2. 安装字体
+# 2. 设置 zsh 为默认 shell
+echo ""
+echo "🐚 设置 zsh 为默认 shell..."
+if [ "$SHELL" != "$(which zsh)" ]; then
+  chsh -s "$(which zsh)"
+  echo "  ✅ 默认 shell 已切换为 zsh（重启终端生效）"
+else
+  echo "  ⏭️  zsh 已是默认 shell"
+fi
+
+# 3. 安装 zsh 插件
+echo ""
+echo "🔌 安装 zsh 插件..."
+ZSH_PLUGIN_DIR="$HOME/.zsh/plugins"
+mkdir -p "$ZSH_PLUGIN_DIR"
+
+install_plugin() {
+  local name="$1" url="$2"
+  if [ ! -d "$ZSH_PLUGIN_DIR/$name" ]; then
+    git clone --depth 1 "$url" "$ZSH_PLUGIN_DIR/$name"
+    echo "  ✅ $name"
+  else
+    echo "  ⏭️  $name 已存在"
+  fi
+}
+
+install_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
+install_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
+install_plugin "zsh-completions" "https://github.com/zsh-users/zsh-completions"
+
+# 4. 安装字体
 echo ""
 echo "🔤 安装 Nerd Font..."
 if ! fc-list | grep -q "JetBrains Mono"; then
@@ -35,7 +65,7 @@ else
   echo "  ⏭️  字体已存在，跳过"
 fi
 
-# 3. 安装 fzf
+# 5. 安装 fzf
 echo ""
 echo "🔍 检查 fzf..."
 if ! command -v fzf &>/dev/null; then
@@ -46,7 +76,7 @@ else
   echo "  ⏭️  fzf 已存在，跳过"
 fi
 
-# 4. 安装 starship
+# 6. 安装 starship
 echo ""
 echo "🚀 检查 starship..."
 if ! command -v starship &>/dev/null; then
@@ -56,11 +86,11 @@ else
   echo "  ⏭️  starship 已存在，跳过"
 fi
 
-# 5. 部署配置文件
+# 7. 部署配置文件
 echo ""
 echo "🔗 链接配置文件..."
-backup .bashrc
-ln -sf "$DOTDIR/bash/.bashrc" "$HOME/.bashrc"
+backup .zshrc
+ln -sf "$DOTDIR/bash/.zshrc" "$HOME/.zshrc"
 
 backup .config/wezterm
 mkdir -p "$HOME/.config/wezterm"
@@ -69,7 +99,7 @@ ln -sf "$DOTDIR/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
 [ -f "$HOME/.gitconfig" ] && backup .gitconfig
 [ -f "$DOTDIR/git/.gitconfig" ] && ln -sf "$DOTDIR/git/.gitconfig" "$HOME/.gitconfig"
 
-# 6. 部署自定义工具
+# 8. 部署自定义工具
 echo ""
 echo "🔧 部署自定义工具..."
 mkdir -p "$HOME/.local/bin"
@@ -79,7 +109,7 @@ for tool in "$DOTDIR/bin/"*; do
   echo "  ✅ $(basename "$tool")"
 done
 
-# 7. 部署 ax 命令库（符号链接，修改直接写入仓库目录）
+# 9. 部署 ax 命令库（符号链接，修改直接写入仓库目录）
 echo ""
 if [ ! -f "$HOME/.ax-commands.json" ]; then
   ln -sf "$DOTDIR/ax-commands.json" "$HOME/.ax-commands.json"
@@ -92,4 +122,4 @@ echo ""
 echo "✅ 部署完成！"
 echo "📁 原有配置已备份到: $BACKUP_DIR"
 echo ""
-echo "👉 请运行: source ~/.bashrc"
+echo "👉 请重启终端，或运行: exec zsh"

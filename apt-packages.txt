@@ -9,6 +9,7 @@ ripgrep
 fd-find
 bat
 tmux
+zsh
 python3-pip
 nodejs
 npm
