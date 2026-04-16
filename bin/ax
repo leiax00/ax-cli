@@ -3,9 +3,34 @@
 # 安装: ln -sf ~/.dotfiles/bin/ax ~/.local/bin/ax
 
 AX_FILE="$HOME/.ax-commands.json"
+DOTDIR="$HOME/.dotfiles"
+AX_REPO_FILE="$DOTDIR/ax-commands.json"
+AUTO_SYNC=true  # 设为 false 关闭自动同步
 
 _init() {
-  [ -f "$AX_FILE" ] || echo '{}' > "$AX_FILE"
+  # 优先从 dotfiles 仓库加载，不存在则创建空文件
+  if [ ! -f "$AX_FILE" ] && [ -f "$AX_REPO_FILE" ]; then
+    ln -sf "$AX_REPO_FILE" "$AX_FILE"
+  elif [ ! -f "$AX_FILE" ]; then
+    echo '{}' > "$AX_FILE"
+  fi
+}
+
+_sync() {
+  [ "$AUTO_SYNC" != "true" ] && return
+  [ ! -d "$DOTDIR/.git" ] && return
+  # 如果是符号链接，不需要复制
+  [ -L "$AX_FILE" ] && return
+  cp "$AX_FILE" "$AX_REPO_FILE" 2>/dev/null || return
+  cd "$DOTDIR"
+  git add ax-commands.json
+  if git diff --cached --quiet; then
+    return
+  fi
+  local msg="sync: $1 ax command '$2'"
+  git commit -m "$msg" --quiet
+  git push --quiet 2>/dev/null &
+  echo "☁️  已同步到远程仓库"
 }
 
 _add() {
@@ -15,6 +40,7 @@ _add() {
   jq --arg n "$name" --arg c "$cmd" --arg d "$desc" \
     '. + {($n): {cmd: $c, desc: $d}}' "$AX_FILE" > "$tmp" && mv "$tmp" "$AX_FILE"
   echo "✅ 已添加: $name - $desc"
+  _sync "add" "$name"
 }
 
 _edit() {
@@ -37,6 +63,7 @@ _edit() {
   jq --arg n "$name" --arg c "$new_cmd" --arg d "$new_desc" \
     '.[$n] = {cmd: $c, desc: $d}' "$AX_FILE" > "$tmp" && mv "$tmp" "$AX_FILE"
   echo "✅ 已更新: $name"
+  _sync "edit" "$name"
 }
 
 _list() {
@@ -73,6 +100,7 @@ _rm() {
   local tmp=$(mktemp)
   jq --arg n "$name" 'del(.[$n])' "$AX_FILE" > "$tmp" && mv "$tmp" "$AX_FILE"
   echo "🗑️  已删除: $name"
+  _sync "delete" "$name"
 }
 
 case "${1:-}" in
@@ -89,6 +117,8 @@ case "${1:-}" in
     echo "  ax rm <名称>                   删除命令"
     echo "  ax <名称>                      执行命令"
     echo "  ax                             交互选择执行"
+    echo ""
+    echo "  添加/编辑/删除后自动同步到 dotfiles 仓库"
     ;;
   *) _run "$1" ;;
 esac

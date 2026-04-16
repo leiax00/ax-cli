@@ -79,12 +79,13 @@ for tool in "$DOTDIR/bin/"*; do
   echo "  ✅ $(basename "$tool")"
 done
 
-# 7. 部署 ax 命令库
+# 7. 部署 ax 命令库（符号链接，修改直接写入仓库目录）
+echo ""
 if [ ! -f "$HOME/.ax-commands.json" ]; then
-  cp "$DOTDIR/ax-commands.json" "$HOME/.ax-commands.json"
-  echo "  ✅ ax 命令库已部署"
+  ln -sf "$DOTDIR/ax-commands.json" "$HOME/.ax-commands.json"
+  echo "  ✅ ax 命令库已部署（符号链接到仓库）"
 else
-  echo "  ⏭️  ax 命令库已存在，跳过（手动合并请编辑 ~/.ax-commands.json）"
+  echo "  ⏭️  ax 命令库已存在，跳过"
 fi
 
 echo ""

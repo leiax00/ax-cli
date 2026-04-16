@@ -8,5 +8,4 @@
 .DS_Store
 Thumbs.db
 
-# 敏感信息
-.ax-commands.json
+# 敏感信息（按需添加）
