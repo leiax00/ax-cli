@@ -103,9 +103,92 @@ _rm() {
   _sync "delete" "$name"
 }
 
+_update() {
+  [ ! -d "$DOTDIR/.git" ] && echo "❌ 未找到 dotfiles 仓库: $DOTDIR" && return 1
+
+  echo "🔄 更新 ax-system-basic..."
+  echo ""
+
+  # 1. 拉取最新配置
+  echo "📦 拉取 dotfiles 仓库..."
+  cd "$DOTDIR"
+  local old=$(git rev-parse HEAD)
+  git pull --quiet 2>&1
+  local new=$(git rev-parse HEAD)
+  if [ "$old" = "$new" ]; then
+    echo "  ⏭️  配置已是最新"
+  else
+    echo "  ✅ 配置已更新: $(git log --oneline $old..$new | head -3)"
+  fi
+
+  # 2. 更新 ax 工具链接
+  mkdir -p "$HOME/.local/bin"
+  chmod +x "$DOTDIR/bin/"*
+  for tool in "$DOTDIR/bin/"*; do
+    ln -sf "$tool" "$HOME/.local/bin/$(basename "$tool")"
+  done
+
+  # 3. 检查系统包
+  echo ""
+  echo "📦 检查系统包..."
+  if [ -f "$DOTDIR/apt-packages.txt" ]; then
+    local new_pkgs=()
+    while IFS= read -r pkg; do
+      [ -z "$pkg" ] && continue
+      dpkg -s "$pkg" &>/dev/null || new_pkgs+=("$pkg")
+    done < "$DOTDIR/apt-packages.txt"
+    if [ ${#new_pkgs[@]} -gt 0 ]; then
+      echo "  📥 新增包: ${new_pkgs[*]}"
+      sudo apt update -qq && sudo apt install -y -qq "${new_pkgs[@]}"
+      echo "  ✅ 安装完成"
+    else
+      echo "  ⏭️  系统包齐全"
+    fi
+  fi
+
+  # 4. 检查 zsh 插件
+  echo ""
+  echo "🔌 检查 zsh 插件..."
+  local ZSH_PLUGIN_DIR="$HOME/.zsh/plugins"
+  mkdir -p "$ZSH_PLUGIN_DIR"
+
+  _check_plugin() {
+    local name="$1" url="$2"
+    if [ -d "$ZSH_PLUGIN_DIR/$name" ]; then
+      cd "$ZSH_PLUGIN_DIR/$name" && git pull --quiet 2>&1 && echo "  ✅ $name 已更新"
+    else
+      git clone --depth 1 "$url" "$ZSH_PLUGIN_DIR/$name" 2>&1 && echo "  ✅ $name 已安装"
+    fi
+  }
+
+  _check_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
+  _check_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
+  _check_plugin "zsh-completions" "https://github.com/zsh-users/zsh-completions"
+
+  # 5. 检查字体
+  echo ""
+  echo "🔤 检查字体..."
+  if ! fc-list | grep -q "JetBrains Mono"; then
+    local FONT_DIR="$HOME/.local/share/fonts"
+    mkdir -p "$FONT_DIR"
+    local tmp_zip=$(mktemp)
+    curl -fLo "$tmp_zip" https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/JetBrainsMono.zip
+    unzip -qo "$tmp_zip" -d "$FONT_DIR"
+    rm "$tmp_zip"
+    fc-cache -fv 2>/dev/null
+    echo "  ✅ 字体已安装"
+  else
+    echo "  ⏭️  字体已存在"
+  fi
+
+  echo ""
+  echo "✅ 更新完成！运行 exec zsh 或重启终端使配置生效。"
+}
+
 case "${1:-}" in
   add)    _add "$2" "$3" "${4:-}" ;;
   edit)   _edit "$2" ;;
+  update) _update ;;
   list|ls) _list ;;
   rm|del) _rm "$2" ;;
   help|--help|-h)
@@ -113,6 +196,7 @@ case "${1:-}" in
     echo ""
     echo "  ax add <名称> <命令> [描述]    添加命令"
     echo "  ax edit <名称>                  编辑命令"
+    echo "  ax update                      更新整个开发环境"
     echo "  ax list                        列出所有命令"
     echo "  ax rm <名称>                   删除命令"
     echo "  ax <名称>                      执行命令"
