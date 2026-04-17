@@ -6,15 +6,16 @@ PROXY_ADDR="${PROXY_ADDR:-http://vpn.yushe.ai:7890}"
 NO_PROXY="${NO_PROXY:-localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local}"
 
 proxy_on() {
-  export http_proxy="$PROXY_ADDR"
+  local addr="${1:-$PROXY_ADDR}"
+  export http_proxy="$addr"
   export https_proxy="$PROXY_ADDR"
   export all_proxy="$PROXY_ADDR"
   export HTTP_PROXY="$PROXY_ADDR"
-  export HTTPS_PROXY="$PROXY_ADDR"
-  export ALL_PROXY="$PROXY_ADDR"
+  export HTTPS_PROXY="$addr"
+  export ALL_PROXY="$addr"
   export no_proxy="$NO_PROXY"
   export NO_PROXY="$NO_PROXY"
-  echo "🟢 Proxy ON: $PROXY_ADDR"
+  echo "🟢 Proxy ON: $addr"
 }
 
 proxy_off() {
