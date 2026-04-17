@@ -22,5 +22,17 @@
   "clean": {
     "cmd": "docker system prune -af",
     "desc": "清理 Docker"
+  },
+  "pn": {
+    "cmd": "proxy_on",
+    "desc": "开启代理"
+  },
+  "pf": {
+    "cmd": "proxy_off",
+    "desc": "关闭代理"
+  },
+  "ps": {
+    "cmd": "proxy_status",
+    "desc": "查看代理状态"
   }
 }
