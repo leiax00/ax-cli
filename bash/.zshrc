@@ -53,6 +53,40 @@ alias ...='cd ../..'
 alias grep='grep --color=auto'
 alias cls='clear'
 
+# === Proxy ===
+PROXY_ADDR="http://vpn.yushe.ai:7890"
+NO_PROXY="localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local"
+
+proxy_on() {
+  export http_proxy="$PROXY_ADDR"
+  export https_proxy="$PROXY_ADDR"
+  export all_proxy="$PROXY_ADDR"
+  export HTTP_PROXY="$PROXY_ADDR"
+  export HTTPS_PROXY="$PROXY_ADDR"
+  export ALL_PROXY="$PROXY_ADDR"
+  export no_proxy="$NO_PROXY"
+  export NO_PROXY="$NO_PROXY"
+  echo "🟢 Proxy ON: $PROXY_ADDR"
+}
+
+proxy_off() {
+  unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY no_proxy NO_PROXY
+  echo "🔴 Proxy OFF"
+}
+
+proxy_status() {
+  if [ -n "$http_proxy" ]; then
+    echo "🟢 Proxy: $http_proxy"
+    echo "   no_proxy: $no_proxy"
+  else
+    echo "🔴 Proxy: OFF"
+  fi
+}
+
+alias pn='proxy_on'
+alias pf='proxy_off'
+alias ps='proxy_status'
+
 # === 键盘绑定 ===
 bindkey -e
 bindkey '^[[A' up-line-or-search      # 上下箭头搜索历史
