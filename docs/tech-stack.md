@@ -1,6 +1,8 @@
 # 技术选型
 
-## 操作系统：Ubuntu 24.04 LTS
+## 操作系统
+
+### 主力：Ubuntu 24.04 LTS
 
 | 需求 | Ubuntu 优势 |
 |------|------------|
@@ -10,11 +12,15 @@
 | AI coding | Cursor/Windsurf 有 Linux 原生版，终端工具原生支持 |
 | 稳定性 | LTS 支持 5 年，2029 年前不用操心升级 |
 
-### 备选对比
+### 兼容：Fedora / Arch
 
-- **Deepin**：国产应用好，但稳定性和社区差
-- **Arch/Manjaro**：AUR 全，但滚动更新不稳定
-- **Fedora**：优秀，但嵌入式和国内软件兼容性不如 Ubuntu
+通过 `lib/detect.sh` 自动检测系统，选择对应包管理器和包列表，核心配置（zsh、WezTerm、ax）跨发行版通用。
+
+| 发行版 | 包管理器 | 包列表文件 |
+|--------|---------|-----------|
+| Ubuntu / Debian / Linux Mint | apt | `packages/ubuntu.txt` |
+| Fedora / RHEL / CentOS | dnf | `packages/fedora.txt` |
+| Arch / Manjaro | pacman | `packages/arch.txt` |
 
 ## 终端：WezTerm
 
@@ -59,6 +65,12 @@
 - 文件/目录快速跳转
 - 与 ax 命令管理器集成
 
+## 代理管理：proxy.sh
+
+- `proxy_on [地址]` / `proxy_off` / `proxy_status`
+- 短别名 `pn` / `pf` / `ps`
+- 自动设置 http/https/all_proxy + no_proxy
+
 ## 自定义命令管理：ax
 
 自己写的轻量 CLI，解决 alias 的问题：
@@ -69,6 +81,22 @@
 | 无法搜索 | `ax` 不带参数 → fzf 交互选择 |
 | 无法 Tab 补全 | bash/zsh 补全脚本 |
 | 多机不同步 | 自动 commit + push 到 git |
+| 环境更新麻烦 | `ax update` 一键更新所有组件 |
+
+## 架构：模块化
+
+`lib/` 目录下每个脚本是一个独立模块，`install.sh` 和 `ax update` 共用同一套模块：
+
+| 模块 | 职责 |
+|------|------|
+| `lib/detect.sh` | 检测系统 + 选择包管理器 |
+| `lib/packages.sh` | 系统包安装/检查 |
+| `lib/shell.sh` | zsh + 插件安装/更新 |
+| `lib/tools.sh` | fzf / starship / 字体 |
+| `lib/deploy.sh` | 配置文件链接/备份 |
+
+新增发行版：加 `packages/xxx.txt` + `detect.sh` 加 case
+新增组件：加 `lib/xxx.sh` + `install.sh` 里 source 调用
 
 ---
 

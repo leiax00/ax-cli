@@ -5,9 +5,11 @@
 | ax 命令管理器 | ✅ | [ax.md](./ax.md) |
 | WezTerm 终端 | ✅ | [wezterm.md](./wezterm.md) |
 | zsh Shell | ✅ | [zsh.md](./zsh.md) |
-| 部署脚本 | ✅ | [install.md](./install.md) |
-| Git 配置 | 🔲 待配置 | — |
-| tmux | 🔲 待实现 | — |
+| 代理管理 | ✅ | [proxy.md](./proxy.md) |
+| 部署与更新 | ✅ | [install.md](./install.md) |
+| 模块架构 | ✅ | [lib.md](./lib.md) |
+| Git 配置 | 🔲 | 待配置 |
+| tmux | 🔲 | 待实现 |
 
 ---
 

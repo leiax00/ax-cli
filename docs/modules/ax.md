@@ -9,6 +9,7 @@
 ```bash
 ax add <名称> <命令> [描述]    # 添加命令
 ax edit <名称>                  # 编辑命令
+ax update                      # 更新整个开发环境
 ax list                        # 列出所有命令
 ax rm <名称>                   # 删除命令
 ax <名称>                      # 执行命令
@@ -33,6 +34,20 @@ ax list
 ax esp          # 直接执行
 ax             # 弹出 fzf 选择
 ```
+
+## ax update - 环境更新
+
+```bash
+ax update
+```
+
+自动执行以下步骤：
+
+1. 拉取 dotfiles 仓库最新代码
+2. 刷新 ax 工具链接
+3. 检查并安装新增系统包（自动适配 apt/dnf/pacman）
+4. 更新 zsh 插件
+5. 检查并安装字体
 
 ## 自动补全
 

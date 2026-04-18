@@ -5,10 +5,20 @@
 ```bash
 ax add <名称> <命令> [描述]    # 添加
 ax edit <名称>                  # 编辑
+ax update                      # 更新整个开发环境
 ax list                        # 列表
 ax rm <名称>                   # 删除
 ax <名称>                      # 执行
 ax                             # fzf 选择
+```
+
+## 代理
+
+```bash
+pn                              # 开启代理
+pf                              # 关闭代理
+ps                              # 查看状态
+pn http://other:1080            # 自定义地址
 ```
 
 ## WezTerm 快捷键（Leader: Ctrl+A）
@@ -62,14 +72,17 @@ grep               grep --color=auto
 cls                clear
 ```
 
-## 部署
+## 部署与更新
 
 ```bash
-# 新机器
+# 新机器（自动检测 Ubuntu/Fedora/Arch）
 git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.dotfiles
 ~/.dotfiles/install.sh && exec zsh
 
-# 更新
+# 更新（拉取配置 + 检查包 + 更新插件）
+ax update && exec zsh
+
+# 手动更新
 cd ~/.dotfiles && git pull && exec zsh
 ```
 
