@@ -9,3 +9,5 @@
 Thumbs.db
 
 # 敏感信息（按需添加）
+*.log
+*.tmp

@@ -7,8 +7,9 @@ DOTDIR="$HOME/.dotfiles"
 AX_REPO_FILE="$DOTDIR/ax-commands.json"
 AUTO_SYNC=true  # 设为 false 关闭自动同步
 
+# === 命令管理核心 ===
+
 _init() {
-  # 优先从 dotfiles 仓库加载，不存在则创建空文件
   if [ ! -f "$AX_FILE" ] && [ -f "$AX_REPO_FILE" ]; then
     ln -sf "$AX_REPO_FILE" "$AX_FILE"
   elif [ ! -f "$AX_FILE" ]; then
@@ -19,7 +20,6 @@ _init() {
 _sync() {
   [ "$AUTO_SYNC" != "true" ] && return
   [ ! -d "$DOTDIR/.git" ] && return
-  # 如果是符号链接，不需要复制
   [ -L "$AX_FILE" ] && return
   cp "$AX_FILE" "$AX_REPO_FILE" 2>/dev/null || return
   cd "$DOTDIR"
@@ -103,13 +103,24 @@ _rm() {
   _sync "delete" "$name"
 }
 
+# === 环境更新 ===
+
 _update() {
   [ ! -d "$DOTDIR/.git" ] && echo "❌ 未找到 dotfiles 仓库: $DOTDIR" && return 1
 
+  # 加载模块
+  source "$DOTDIR/lib/detect.sh"
+  source "$DOTDIR/lib/packages.sh"
+  source "$DOTDIR/lib/shell.sh"
+  source "$DOTDIR/lib/tools.sh"
+  source "$DOTDIR/lib/deploy.sh"
+
   echo "🔄 更新 ax-system-basic..."
   echo ""
+  log_os
 
   # 1. 拉取最新配置
+  echo ""
   echo "📦 拉取 dotfiles 仓库..."
   cd "$DOTDIR"
   local old=$(git rev-parse HEAD)
@@ -121,69 +132,23 @@ _update() {
     echo "  ✅ 配置已更新: $(git log --oneline $old..$new | head -3)"
   fi
 
-  # 2. 更新 ax 工具链接
-  mkdir -p "$HOME/.local/bin"
-  chmod +x "$DOTDIR/bin/"*
-  for tool in "$DOTDIR/bin/"*; do
-    ln -sf "$tool" "$HOME/.local/bin/$(basename "$tool")"
-  done
+  # 2. 更新 ax 工具
+  update_ax_tool
 
   # 3. 检查系统包
-  echo ""
-  echo "📦 检查系统包..."
-  if [ -f "$DOTDIR/apt-packages.txt" ]; then
-    local new_pkgs=()
-    while IFS= read -r pkg; do
-      [ -z "$pkg" ] && continue
-      dpkg -s "$pkg" &>/dev/null || new_pkgs+=("$pkg")
-    done < "$DOTDIR/apt-packages.txt"
-    if [ ${#new_pkgs[@]} -gt 0 ]; then
-      echo "  📥 新增包: ${new_pkgs[*]}"
-      sudo apt update -qq && sudo apt install -y -qq "${new_pkgs[@]}"
-      echo "  ✅ 安装完成"
-    else
-      echo "  ⏭️  系统包齐全"
-    fi
-  fi
+  install_packages
 
-  # 4. 检查 zsh 插件
-  echo ""
-  echo "🔌 检查 zsh 插件..."
-  local ZSH_PLUGIN_DIR="$HOME/.zsh/plugins"
-  mkdir -p "$ZSH_PLUGIN_DIR"
-
-  _check_plugin() {
-    local name="$1" url="$2"
-    if [ -d "$ZSH_PLUGIN_DIR/$name" ]; then
-      cd "$ZSH_PLUGIN_DIR/$name" && git pull --quiet 2>&1 && echo "  ✅ $name 已更新"
-    else
-      git clone --depth 1 "$url" "$ZSH_PLUGIN_DIR/$name" 2>&1 && echo "  ✅ $name 已安装"
-    fi
-  }
-
-  _check_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
-  _check_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
-  _check_plugin "zsh-completions" "https://github.com/zsh-users/zsh-completions"
+  # 4. 更新 zsh 插件
+  update_zsh_plugins
 
   # 5. 检查字体
-  echo ""
-  echo "🔤 检查字体..."
-  if ! fc-list | grep -q "JetBrains Mono"; then
-    local FONT_DIR="$HOME/.local/share/fonts"
-    mkdir -p "$FONT_DIR"
-    local tmp_zip=$(mktemp)
-    curl -fLo "$tmp_zip" https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/JetBrainsMono.zip
-    unzip -qo "$tmp_zip" -d "$FONT_DIR"
-    rm "$tmp_zip"
-    fc-cache -fv 2>/dev/null
-    echo "  ✅ 字体已安装"
-  else
-    echo "  ⏭️  字体已存在"
-  fi
+  install_nerd_font
 
   echo ""
   echo "✅ 更新完成！运行 exec zsh 或重启终端使配置生效。"
 }
+
+# === 入口 ===
 
 case "${1:-}" in
   add)    _add "$2" "$3" "${4:-}" ;;
