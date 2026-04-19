@@ -1,24 +1,56 @@
 # 快速参考
 
+## ax 配置
+
+```bash
+ax config init              # 初始化配置 + git repo
+ax config remote <url>      # 设置远程仓库
+ax config push / pull       # 同步
+ax config export [-f]       # 导出（-f 含二进制）
+ax config import <file>     # 导入
+ax config path              # 显示配置目录
+```
+
 ## ax 命令管理
 
 ```bash
-ax add <名称> <命令> [描述]    # 添加
-ax edit <名称>                  # 编辑
-ax update                      # 更新整个开发环境
-ax list                        # 列表
-ax rm <名称>                   # 删除
-ax <名称>                      # 执行
-ax                             # fzf 选择
+ax add <名> <命令> [描述]    # 添加
+ax edit <名>                  # 编辑
+ax list / ls                  # 列表
+ax rm / del <名>              # 删除
+ax run [名]                   # 执行
+ax <名>                       # 快捷执行
+```
+
+## ax 环境变量
+
+```bash
+ax env add <名> <值> [-d 描述] [-t 标签]   # 添加
+ax env edit <名> [-v 值] [-d 描述] [-t 标签] # 修改
+ax env rm <名>...                           # 删除
+ax env show [--all] [-t 标签]               # 列表
+ax env pause <名> / -t <标签> / --all       # 暂停
+ax env resume <名> / -t <标签> / --all      # 恢复
+eval $(ax env load)                         # 加载到 shell
+ax env tags                                 # 查看标签
 ```
 
 ## 代理
 
 ```bash
-pn                              # 开启代理
-pf                              # 关闭代理
-ps                              # 查看状态
+pn                              # eval $(ax proxy on)
+pf                              # eval $(ax proxy off)
+ps                              # ax proxy status
 pn http://other:1080            # 自定义地址
+```
+
+## 系统管理
+
+```bash
+ax install                      # 一键安装
+ax push / pull                  # 配置同步
+ax info                         # 查看配置
+ax completion bash/zsh/powershell # 安装补全
 ```
 
 ## WezTerm 快捷键（Leader: Ctrl+A）
@@ -70,20 +102,6 @@ la                 ls -A
 ...                cd ../..
 grep               grep --color=auto
 cls                clear
-```
-
-## 部署与更新
-
-```bash
-# 新机器（自动检测 Ubuntu/Fedora/Arch）
-git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.ax
-~/.ax/install.sh && exec zsh
-
-# 更新（拉取配置 + 检查包 + 更新插件）
-ax update && exec zsh
-
-# 手动更新
-cd ~/.ax && git pull && exec zsh
 ```
 
 ---

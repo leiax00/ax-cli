@@ -14,13 +14,7 @@
 
 ### 兼容：Fedora / Arch
 
-通过 `lib/detect.sh` 自动检测系统，选择对应包管理器和包列表，核心配置（zsh、WezTerm、ax）跨发行版通用。
-
-| 发行版 | 包管理器 | 包列表文件 |
-|--------|---------|-----------|
-| Ubuntu / Debian / Linux Mint | apt | `packages/ubuntu.txt` |
-| Fedora / RHEL / CentOS | dnf | `packages/fedora.txt` |
-| Arch / Manjaro | pacman | `packages/arch.txt` |
+通过自动检测系统，选择对应包管理器和包列表，核心配置跨发行版通用。
 
 ## 终端：WezTerm
 
@@ -31,12 +25,6 @@
 | 配置 | Lua，灵活可编程 |
 | 跨平台 | Linux/macOS/Windows 一套配置 |
 | tmux 兼容 | Ctrl+A Leader 键，SSH 时无缝切 tmux |
-
-### 备选对比
-
-- **Alacritty**：极简高性能，但功能太朴素，无分屏
-- **Kitty**：不错，但配置不如 WezTerm 灵活
-- **GNOME Terminal**：默认够用但不好用
 
 ## Shell：zsh
 
@@ -49,54 +37,61 @@
 
 ### 不选 Oh My Zsh
 
-- 太重，启动慢（0.3s+）
-- 更新容易出问题
-- 手动装 3 个插件更干净
+太重（0.3s+ 启动），手动装 3 个插件更干净。
 
 ## Prompt：Starship
 
-- 跨 shell（zsh/bash/fish）
-- 显示 git 状态、语言版本、命令耗时
-- Rust 编写，毫秒级渲染
+跨 shell，显示 git 状态、语言版本、命令耗时，Rust 编写毫秒级渲染。
 
 ## 模糊搜索：fzf
 
-- 命令历史搜索（Ctrl+R）
-- 文件/目录快速跳转
-- 与 ax 命令管理器集成
+命令历史搜索（Ctrl+R）、文件/目录快速跳转。
 
-## 代理管理：proxy.sh
+## CLI 工具：ax（Rust）
 
-- `proxy_on [地址]` / `proxy_off` / `proxy_status`
-- 短别名 `pn` / `pf` / `ps`
-- 自动设置 http/https/all_proxy + no_proxy
+自己写的开发环境管理工具，解决以下问题：
 
-## 自定义命令管理：ax
+| 问题 | ax 的方案 |
+|------|----------|
+| alias 无法查看/搜索/补全 | `ax list` + shell 补全 |
+| 环境变量散落各处 | `ax env` 统一管理 + 标签 + 暂停 |
+| 配置不能同步 | 配置目录即 git 仓库，`ax push/pull` |
+| 新机器部署麻烦 | `ax config init && ax install` |
+| 迁移困难 | `ax config export/import` |
+| 代理管理繁琐 | `eval $(ax proxy on)` |
 
-自己写的轻量 CLI，解决 alias 的问题：
+### 为什么用 Rust
 
-| alias 的痛点 | ax 的方案 |
-|-------------|----------|
-| 无法查看已有命令 | `ax list` 带描述列表 |
-| 无法搜索 | `ax` 不带参数 → fzf 交互选择 |
-| 无法 Tab 补全 | bash/zsh 补全脚本 |
-| 多机不同步 | 自动 commit + push 到 git |
-| 环境更新麻烦 | `ax update` 一键更新所有组件 |
-
-## 架构：模块化
-
-`lib/` 目录下每个脚本是一个独立模块，`install.sh` 和 `ax update` 共用同一套模块：
-
-| 模块 | 职责 |
+| 优势 | 说明 |
 |------|------|
-| `lib/detect.sh` | 检测系统 + 选择包管理器 |
-| `lib/packages.sh` | 系统包安装/检查 |
-| `lib/shell.sh` | zsh + 插件安装/更新 |
-| `lib/tools.sh` | fzf / starship / 字体 |
-| `lib/deploy.sh` | 配置文件链接/备份 |
+| 单二进制 | 无运行时依赖，curl 下载即用 |
+| 跨平台 | Linux/macOS/Windows 同源编译 |
+| 性能 | 毫秒级启动 |
+| 便携模式 | 二进制旁放 config/ 即可，适合 Windows/U盘 |
 
-新增发行版：加 `packages/xxx.txt` + `detect.sh` 加 case
-新增组件：加 `lib/xxx.sh` + `install.sh` 里 source 调用
+## 架构：工具与配置分离
+
+```
+ax 二进制                    配置仓库
+┌──────────────┐            ┌──────────────────┐
+│  纯 CLI 工具  │    加载     │  config.yaml      │
+│  零配置内置   │ ────────→  │  config.d/*.yaml  │
+│  ~4.6MB      │            │  bash/.zshrc      │
+└──────────────┘            │  wezterm/...      │
+                            │  packages/        │
+                            └────────┬─────────┘
+                                     │ git push/pull
+                                     ▼
+                              远程仓库（可选）
+```
+
+### 配置优先级（从高到低）
+
+```
+AX_CONFIG_DIR 环境变量
+  > 可执行文件同级 config/ 或 config.yaml
+    > ~/.config/ax-cli/
+```
 
 ---
 
