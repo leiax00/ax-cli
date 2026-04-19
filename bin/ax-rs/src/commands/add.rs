@@ -15,7 +15,7 @@ pub fn execute(name: &str, cmd: &str, desc: &str, config: &Config) -> Result<()>
     });
     save_commands(&map)?;
     println!("✅ 已添加: {name} - {desc}");
-    crate::commands::sync::execute(config)?;
+    crate::commands::config::push(config)?;
 
     Ok(())
 }

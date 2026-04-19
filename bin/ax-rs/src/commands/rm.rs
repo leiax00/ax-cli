@@ -7,7 +7,7 @@ pub fn execute(name: &str, config: &Config) -> Result<()> {
     if map.remove(name).is_some() {
         save_commands(&map)?;
         println!("🗑️  已删除: {name}");
-        crate::commands::sync::execute(config)?;
+        crate::commands::config::push(config)?;
     } else {
         println!("❌ 未找到: {name}");
     }

@@ -137,7 +137,7 @@ fn completion_dir(shell: &str) -> Result<std::path::PathBuf> {
     }
 }
 
-pub fn execute(shell: &str, print_only: bool, config: &Config) -> Result<()> {
+pub fn execute(shell: &str, print_only: bool, _config: &Config) -> Result<()> {
     let script = match shell {
         "bash" | "b" => BASH_COMPLETION,
         "zsh" | "z" => ZSH_COMPLETION,

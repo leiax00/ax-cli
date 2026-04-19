@@ -9,51 +9,43 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Initialize ax-cli (generate default config and templates)
-    Init {
-        /// Force overwrite existing config
-        #[arg(short, long)]
-        force: bool,
+    /// Config management (init, remote, push, pull, export, import)
+    Config {
+        #[command(subcommand)]
+        action: ConfigAction,
     },
     /// Add a custom command
     Add {
-        /// Command name
         name: String,
-        /// Command to execute
         cmd: String,
-        /// Description
         #[arg(default_value = "")]
         desc: String,
     },
     /// Edit an existing command
     Edit {
-        /// Command name
         name: String,
     },
     /// List all commands
     #[command(alias = "ls")]
     List {
-        /// Only output command names (for completion scripts)
         #[arg(long, hide(true))]
         quiet: bool,
     },
     /// Remove a command
     #[command(alias = "del")]
     Rm {
-        /// Command name
         name: String,
     },
     /// Run a command (or interactive select if no name given)
     Run {
-        /// Command name
         name: Option<String>,
     },
-    /// Sync commands to remote repo
-    Sync,
-    /// Pull latest config from remote repo
+    /// Push config to remote repo
+    #[command(alias = "sync")]
+    Push,
+    /// Pull latest config from remote
+    #[command(alias = "update")]
     Pull,
-    /// Update development environment (packages, plugins, fonts)
-    Update,
     /// Full installation (install packages, tools, deploy configs)
     Install,
     /// Proxy management
@@ -61,23 +53,57 @@ pub enum Commands {
         #[command(subcommand)]
         action: ProxyAction,
     },
-    /// Show current config and paths
-    Info,
     /// Generate and install shell completion
     Completion {
-        /// Shell type (bash, zsh, powershell)
         shell: String,
-        /// Only print script to stdout, don't install
         #[arg(long, short = 'p')]
         print: bool,
     },
+    /// Show current config and paths
+    Info,
+}
+
+#[derive(Subcommand)]
+pub enum ConfigAction {
+    /// Initialize config directory with defaults + git repo
+    Init {
+        /// Force overwrite existing config files
+        #[arg(short, long)]
+        force: bool,
+    },
+    /// Set or show remote git repository URL
+    Remote {
+        /// Remote URL (leave empty to show current)
+        url: Option<String>,
+    },
+    /// Push config to remote (alias: ax push)
+    #[command(alias = "upload")]
+    Push,
+    /// Pull config from remote (alias: ax pull)
+    #[command(alias = "download")]
+    Pull,
+    /// Export config as tar.gz (-f to include ax binary)
+    Export {
+        /// Include ax binary in the archive
+        #[arg(short = 'f', long)]
+        with_binary: bool,
+        /// Output file path (default: ax-config-<timestamp>.tar.gz)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+    /// Import config from tar.gz
+    Import {
+        /// Path to archive file
+        file: String,
+    },
+    /// Show config directory path
+    Path,
 }
 
 #[derive(Subcommand)]
 pub enum ProxyAction {
     /// Turn proxy on (outputs shell export to stdout, use: eval $(ax proxy on))
     On {
-        /// Custom proxy address
         addr: Option<String>,
     },
     /// Turn proxy off

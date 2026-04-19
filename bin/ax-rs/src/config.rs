@@ -12,7 +12,6 @@ pub struct Config {
     pub shell: ShellConfig,
     pub packages: PackagesConfig,
     pub deploy: DeployConfig,
-    pub repo: RepoConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -136,24 +135,6 @@ pub struct LinkEntry {
     pub dst: String,
     #[serde(default)]
     pub optional: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(default)]
-pub struct RepoConfig {
-    /// Git 远程仓库地址（可选，用于同步）
-    pub remote: String,
-    /// 本地仓库目录（默认 ~/.ax-repo）
-    pub local_dir: String,
-}
-
-impl Default for RepoConfig {
-    fn default() -> Self {
-        Self {
-            remote: "https://anyhub.yushe.ai/leiax00/ax-system-basic.git".into(),
-            local_dir: "~/.ax-repo".into(),
-        }
-    }
 }
 
 /// 命令库（JSON）

@@ -1,13 +1,12 @@
 pub mod add;
 pub mod completion;
+pub mod config;
 pub mod edit;
-pub mod init;
 pub mod info;
 pub mod install;
 pub mod list;
-pub mod pull;
 pub mod proxy;
+pub mod pull;
+pub mod push;
 pub mod rm;
 pub mod run;
-pub mod sync;
-pub mod update;

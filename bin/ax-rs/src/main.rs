@@ -23,8 +23,18 @@ fn main() -> Result<()> {
     let config = config::ConfigLoader::load()?;
 
     match cli.command {
-        Some(cli::Commands::Init { force }) => {
-            commands::init::execute(force, &config)?;
+        Some(cli::Commands::Config { action }) => {
+            match action {
+                cli::ConfigAction::Init { force } => commands::config::init(force, &config)?,
+                cli::ConfigAction::Remote { url } => commands::config::remote(url.as_deref(), &config)?,
+                cli::ConfigAction::Push => commands::config::push(&config)?,
+                cli::ConfigAction::Pull => commands::config::pull(&config)?,
+                cli::ConfigAction::Export { with_binary, output } => {
+                    commands::config::export(with_binary, output.as_deref(), &config)?;
+                }
+                cli::ConfigAction::Import { file } => commands::config::import(&file, &config)?,
+                cli::ConfigAction::Path => commands::config::path(&config)?,
+            }
         }
         Some(cli::Commands::Add { name, cmd, desc }) => {
             commands::add::execute(&name, &cmd, &desc, &config)?;
@@ -40,19 +50,16 @@ fn main() -> Result<()> {
             }
         }
         Some(cli::Commands::Rm { name }) => {
-            commands::rm::execute(&name, &config)?;
+            crate::commands::rm::execute(&name, &config)?;
         }
         Some(cli::Commands::Run { name }) => {
             commands::run::execute(name.as_deref(), &config)?;
         }
-        Some(cli::Commands::Sync) => {
-            commands::sync::execute(&config)?;
+        Some(cli::Commands::Push) => {
+            commands::push::execute(&config)?;
         }
         Some(cli::Commands::Pull) => {
             commands::pull::execute(&config)?;
-        }
-        Some(cli::Commands::Update) => {
-            commands::update::execute(&config)?;
         }
         Some(cli::Commands::Install) => {
             commands::install::execute(&config)?;
@@ -60,11 +67,11 @@ fn main() -> Result<()> {
         Some(cli::Commands::Proxy { action }) => {
             commands::proxy::execute(&action, &config)?;
         }
-        Some(cli::Commands::Info) => {
-            commands::info::execute(&config)?;
-        }
         Some(cli::Commands::Completion { shell, print }) => {
             commands::completion::execute(&shell, print, &config)?;
+        }
+        Some(cli::Commands::Info) => {
+            commands::info::execute(&config)?;
         }
         None => {
             commands::run::execute(None, &config)?;

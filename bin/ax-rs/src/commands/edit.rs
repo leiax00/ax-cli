@@ -29,7 +29,7 @@ pub fn execute(name: &str, config: &Config) -> Result<()> {
         });
         save_commands(&map)?;
         println!("✅ 已更新: {name}");
-        crate::commands::sync::execute(config)?;
+        crate::commands::config::push(config)?;
     } else {
         println!("❌ 未找到: {name}");
     }
