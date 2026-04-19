@@ -1,0 +1,130 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '编译目标（留空=全部平台）'
+        required: false
+        type: choice
+        options:
+          - 'all'
+          - 'x86_64-unknown-linux-gnu'
+          - 'aarch64-unknown-linux-gnu'
+          - 'x86_64-apple-darwin'
+          - 'aarch64-apple-darwin'
+          - 'x86_64-pc-windows-msvc'
+        default: 'all'
+      ref:
+        description: '分支/标签/commit（默认 main）'
+        required: false
+        default: 'main'
+
+env:
+  CARGO_TERM_COLOR: always
+  BINARY_NAME: ax
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: ax-linux-x86_64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: ax-linux-aarch64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact: ax-macos-x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact: ax-macos-aarch64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact: ax-windows-x86_64.exe
+
+    runs-on: ${{ matrix.os }}
+    # 如果用户指定了单个目标，跳过其他
+    if: |
+      github.event.inputs.target == 'all' ||
+      github.event.inputs.target == matrix.target
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || 'main' }}
+
+      - name: Build info
+        run: |
+          echo "🎯 Target: ${{ matrix.target }}"
+          echo "📦 Ref: ${{ github.event.inputs.ref || 'main' }}"
+          echo "⚙️  OS: ${{ runner.os }}"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross compile deps (aarch64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+        working-directory: bin/ax-rs
+
+      - name: Rename (unix)
+        if: runner.os != 'Windows'
+        run: |
+          cp target/${{ matrix.target }}/release/${{ env.BINARY_NAME }} target/${{ matrix.target }}/release/${{ matrix.artifact }}
+        working-directory: bin/ax-rs
+
+      - name: Rename (windows)
+        if: runner.os == 'Windows'
+        run: |
+          copy target\${{ matrix.target }}\release\${{ env.BINARY_NAME }}.exe target\${{ matrix.target }}\release\${{ matrix.artifact }}
+        working-directory: bin/ax-rs
+        shell: cmd
+
+      - name: Show binary size
+        run: |
+          ls -lh target/${{ matrix.target }}/release/${{ matrix.artifact }}
+        working-directory: bin/ax-rs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: bin/ax-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }}
+          retention-days: 30
+
+  summary:
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Build summary
+        run: |
+          echo "## 📦 编译产物" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 文件 | 大小 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          for file in artifacts/*/*; do
+            if [ -f "$file" ]; then
+              name=$(basename "$file")
+              size=$(ls -lh "$file" | awk '{print $5}')
+              echo "| \`${name}\` | ${size} |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⬇️ 在 Artifacts 中下载" >> $GITHUB_STEP_SUMMARY
