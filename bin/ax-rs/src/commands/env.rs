@@ -140,12 +140,29 @@ pub fn resume(names: &[String], tag: Option<&str>, all: bool, config: &Config) -
     Ok(())
 }
 
-/// 输出 shell export 命令（eval $(ax env load) 用）
+/// 输出 shell export 命令
+/// 自动检测 shell 类型，输出对应格式
+/// bash/zsh: eval $(ax env load)
+/// powershell: Invoke-Expression "$(ax env load)"
+/// cmd: for /f "delims=" %i in ('ax env load') do %i
 pub fn load(config: &Config) -> Result<()> {
     let map = load_all_env(config)?;
+    let shell_type = detect_shell_type();
+
     for (name, entry) in &map {
-        if !entry.paused {
-            println!("export {}={}", name, shell_escape(&entry.value));
+        if entry.paused {
+            continue;
+        }
+        match shell_type {
+            ShellType::PowerShell => {
+                println!("$env:{name} = \"{}\"", ps_escape(&entry.value));
+            }
+            ShellType::Cmd => {
+                println!("set {}={}", name, entry.value);
+            }
+            ShellType::Bash => {
+                println!("export {}={}", name, bash_escape(&entry.value));
+            }
         }
     }
     Ok(())
@@ -176,10 +193,66 @@ pub fn tags(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn shell_escape(s: &str) -> String {
-    if s.contains(' ') || s.contains('\'') || s.contains('"') || s.contains('$') {
-        format!("'{}'", s.replace('\'', "'\\''"))
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ShellType {
+    Bash,
+    PowerShell,
+    Cmd,
+}
+
+/// 检测当前 shell 类型
+fn detect_shell_type() -> ShellType {
+    // 检查 AX_SHELL 环境变量（手动指定）
+    if let Ok(s) = std::env::var("AX_SHELL") {
+        return match s.to_lowercase().as_str() {
+            "powershell" | "pwsh" => ShellType::PowerShell,
+            "cmd" | "cmd.exe" => ShellType::Cmd,
+            _ => ShellType::Bash,
+        };
+    }
+
+    // 通过父进程检测
+    let parent = std::env::var("SHELL").unwrap_or_default();
+    if parent.contains("pwsh") || parent.contains("powershell") {
+        return ShellType::PowerShell;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: 检查 PSModulePath 或当前进程名
+        if std::env::var("PSModulePath").is_ok() {
+            // 进一步区分 pwsh 和 powershell
+            let exe = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
+                .unwrap_or_default();
+            // 检查父进程是否是 cmd
+            let pp = std::env::var("PROMPT").unwrap_or_default();
+            if !pp.is_empty() {
+                return ShellType::Cmd;
+            }
+            return ShellType::PowerShell;
+        }
+        return ShellType::Cmd;
+    }
+
+    ShellType::Bash
+}
+
+fn bash_escape(s: &str) -> String {
+    let needs = s.contains(' ')
+        || s.contains('\x27')
+        || s.contains('"')
+        || s.contains('$')
+        || s.contains('\\');
+    if needs {
+        let escaped = s.replace("\x27", "'\\x27''");
+        format!("'{}'", escaped)
     } else {
         s.to_string()
     }
+}
+
+fn ps_escape(s: &str) -> String {
+    s.replace('"', "`\"")
 }
