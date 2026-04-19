@@ -1,0 +1,31 @@
+{
+  "name": "@leiax00/ax-cli",
+  "version": "0.1.0",
+  "description": "Personal dev environment CLI manager - cross-platform binary",
+  "bin": {
+    "ax": "./bin/ax"
+  },
+  "scripts": {
+    "postinstall": "node install.js",
+    "preuninstall": "node uninstall.js"
+  },
+  "keywords": ["cli", "dev-env", "dotfiles", "config", "cross-platform"],
+  "author": "leiax00",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://anyhub.yushe.ai/leiax00/ax-system-basic.git"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}
