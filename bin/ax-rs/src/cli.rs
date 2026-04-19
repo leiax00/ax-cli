@@ -63,10 +63,13 @@ pub enum Commands {
     },
     /// Show current config and paths
     Info,
-    /// Generate shell completion script
+    /// Generate and install shell completion
     Completion {
         /// Shell type (bash, zsh, powershell)
         shell: String,
+        /// Only print script to stdout, don't install
+        #[arg(long, short = 'p')]
+        print: bool,
     },
 }
 

@@ -63,8 +63,8 @@ fn main() -> Result<()> {
         Some(cli::Commands::Info) => {
             commands::info::execute(&config)?;
         }
-        Some(cli::Commands::Completion { shell }) => {
-            commands::completion::execute(&shell, &config)?;
+        Some(cli::Commands::Completion { shell, print }) => {
+            commands::completion::execute(&shell, print, &config)?;
         }
         None => {
             commands::run::execute(None, &config)?;
