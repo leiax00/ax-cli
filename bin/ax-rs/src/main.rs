@@ -6,27 +6,26 @@ mod packages;
 mod shell;
 mod tools;
 
-use std::path::PathBuf;
-
 use anyhow::Result;
 use clap::Parser;
 
-/// 展开路径中的 ~
-pub fn expand(path: &str) -> PathBuf {
+pub fn expand(path: &str) -> std::path::PathBuf {
     if path.starts_with("~/") {
         if let Some(home) = dirs::home_dir() {
             return home.join(&path[2..]);
         }
     }
-    PathBuf::from(path)
+    std::path::PathBuf::from(path)
 }
 
 fn main() -> Result<()> {
-    env_logger::init();
     let cli = cli::Cli::parse();
     let config = config::ConfigLoader::load()?;
 
     match cli.command {
+        Some(cli::Commands::Init { force }) => {
+            commands::init::execute(force, &config)?;
+        }
         Some(cli::Commands::Add { name, cmd, desc }) => {
             commands::add::execute(&name, &cmd, &desc, &config)?;
         }
@@ -45,6 +44,9 @@ fn main() -> Result<()> {
         Some(cli::Commands::Sync) => {
             commands::sync::execute(&config)?;
         }
+        Some(cli::Commands::Pull) => {
+            commands::pull::execute(&config)?;
+        }
         Some(cli::Commands::Update) => {
             commands::update::execute(&config)?;
         }
@@ -54,8 +56,10 @@ fn main() -> Result<()> {
         Some(cli::Commands::Proxy { action }) => {
             commands::proxy::execute(&action, &config)?;
         }
+        Some(cli::Commands::Info) => {
+            commands::info::execute(&config)?;
+        }
         None => {
-            // 无子命令 → 交互选择执行
             commands::run::execute(None, &config)?;
         }
     }

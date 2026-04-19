@@ -1,39 +1,24 @@
 use anyhow::Result;
-use crate::config::Config;
+use crate::config::{Config, expand_home};
 
 pub fn execute(config: &Config) -> Result<()> {
-    let repo_dir = crate::expand(&config.ax.repo_dir);
-
-    if !repo_dir.join(".git").exists() {
-        anyhow::bail!("❌ 未找到 dotfiles 仓库: {}", repo_dir.display());
-    }
-
     println!("🔄 更新 ax-system-basic...");
     println!("");
 
-    // 1. git pull
-    println!("📦 拉取 dotfiles 仓库...");
-    let output = std::process::Command::new("git")
-        .args(["pull", "--quiet"])
-        .current_dir(&repo_dir)
-        .output()?;
-
-    if output.status.success() {
+    // 1. git pull 仓库
+    let local_dir = expand_home(&config.repo.local_dir);
+    if local_dir.join(".git").exists() {
+        println!("📦 拉取远程仓库...");
+        let _ = std::process::Command::new("git")
+            .args(["pull", "--quiet"])
+            .current_dir(&local_dir)
+            .output();
         println!("  ✅ 已更新");
-    } else {
-        println!("  ⏭️  已是最新或更新失败");
     }
 
-    // 2. 刷新 ax 工具链接
+    // 2. 同步仓库配置到本地
     println!("");
-    println!("🔧 刷新 ax 工具链接...");
-    let bin_dir = crate::expand("~/.local/bin");
-    std::fs::create_dir_all(&bin_dir)?;
-    let src_bin = repo_dir.join("bin").join("ax");
-    let dst_bin = bin_dir.join("ax");
-    let _ = std::fs::remove_file(&dst_bin);
-    std::os::unix::fs::symlink(&src_bin, &dst_bin)?;
-    println!("  ✅ ax");
+    crate::commands::pull::execute(config)?;
 
     // 3. 检查系统包
     println!("");

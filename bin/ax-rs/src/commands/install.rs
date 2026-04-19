@@ -1,14 +1,19 @@
 use anyhow::Result;
-use crate::config::Config;
+use crate::config::{Config, config_dir, expand_home};
 
 pub fn execute(config: &Config) -> Result<()> {
-    let _repo_dir = crate::expand(&config.ax.repo_dir);
-    let backup_dir = format!("{}-{}", config.deploy.backup_dir, chrono_now());
+    let cdir = config_dir();
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs().to_string())
+        .unwrap_or_else(|_| "0".into());
+    let backup_dir = expand_home(&format!("~/.ax-backup-{}", ts));
 
     println!("🚀 开始部署开发环境...");
     println!("");
     println!("🖥️  系统: {} ({})", crate::detect::os_name(), crate::detect::os_id());
     println!("📦 包管理器: {}", crate::detect::pkg_manager());
+    println!("📂 配置目录: {}", cdir.display());
     println!("");
 
     // 1. 安装系统包
@@ -34,94 +39,66 @@ pub fn execute(config: &Config) -> Result<()> {
     println!("");
     crate::tools::check_font()?;
 
-    // 6. 部署配置文件
+    // 6. 部署配置文件（从配置目录链接到系统位置）
     println!("");
-    deploy_dotfiles(config, &backup_dir)?;
-
-    // 7. 部署 ax 工具
-    println!("");
-    deploy_ax_tool(config)?;
+    deploy_configs(config, &cdir, &backup_dir)?;
 
     println!("");
     println!("✅ 部署完成！");
-    println!("📁 原有配置已备份到: {backup_dir}");
+    println!("📁 原有配置已备份到: {}", backup_dir.display());
     println!("");
     println!("👉 请重启终端，或运行: exec zsh");
 
     Ok(())
 }
 
-fn deploy_dotfiles(config: &Config, backup_dir: &str) -> Result<()> {
+fn deploy_configs(config: &Config, cdir: &std::path::PathBuf, backup_dir: &std::path::Path) -> Result<()> {
     println!("🔗 链接配置文件...");
-    let dotfiles_dir = crate::expand(&config.deploy.ax_dir);
-    let _home = crate::expand("~");
 
     for link in &config.deploy.links {
-        let src = dotfiles_dir.join(&link.src);
-        let dst = crate::expand(&link.dst);
+        let src = cdir.join(&link.src);
+        let dst = expand_home(&link.dst);
 
-        if !src.exists() && link.optional {
+        if !src.exists() {
+            if link.optional {
+                continue;
+            }
+            println!("  ⚠️  源文件不存在: {} (跳过)", link.src);
             continue;
         }
 
         // 备份
-        if dst.exists() {
-            if !std::fs::symlink_metadata(&dst).map(|m| m.file_type().is_symlink()).unwrap_or(false) {
-                std::fs::create_dir_all(backup_dir)?;
-                let backup_path = format!("{}/{}", backup_dir, link.dst.trim_start_matches("~/"));
-                if let Some(parent) = std::path::Path::new(&backup_path).parent() {
-                    std::fs::create_dir_all(parent)?;
-                }
-                let _ = std::fs::copy(&dst, &backup_path);
-                println!("  📦 已备份: {}", link.dst);
+        if dst.exists() && !std::fs::symlink_metadata(&dst).map(|m| m.file_type().is_symlink()).unwrap_or(false) {
+            std::fs::create_dir_all(backup_dir)?;
+            let rel = link.dst.trim_start_matches("~/");
+            let backup_path = backup_dir.join(rel);
+            if let Some(parent) = backup_path.parent() {
+                std::fs::create_dir_all(parent)?;
             }
-            let _ = std::fs::remove_file(&dst);
+            let _ = std::fs::copy(&dst, &backup_path);
+            println!("  📦 已备份: {}", link.dst);
         }
+
+        // 移除已有链接
+        let _ = std::fs::remove_file(&dst);
 
         // 创建目标目录
         if let Some(parent) = dst.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
-        std::os::unix::fs::symlink(&src, &dst)?;
+        // 创建符号链接
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&src, &dst)?;
+        }
+        #[cfg(windows)]
+        {
+            std::os::windows::fs::symlink_file(&src, &dst)?;
+        }
+
         println!("  ✅ {} → {}", link.src, link.dst);
     }
 
     Ok(())
-}
-
-fn deploy_ax_tool(config: &Config) -> Result<()> {
-    println!("🔧 部署 ax 工具...");
-    let repo_dir = crate::expand(&config.ax.repo_dir);
-    let bin_dir = crate::expand("~/.local/bin");
-    std::fs::create_dir_all(&bin_dir)?;
-
-    let src_bin = repo_dir.join("bin").join("ax");
-    let dst_bin = bin_dir.join("ax");
-    let _ = std::fs::remove_file(&dst_bin);
-    std::os::unix::fs::symlink(&src_bin, &dst_bin)?;
-    println!("  ✅ ax");
-
-    // 命令库符号链接
-    let cmd_path = crate::expand(&config.ax.commands_file);
-    let repo_cmd_path = repo_dir.join("ax-commands.json");
-    if !cmd_path.exists() {
-        std::os::unix::fs::symlink(&repo_cmd_path, &cmd_path)?;
-        println!("  ✅ ax 命令库（符号链接）");
-    } else {
-        println!("  ⏭️  ax 命令库已存在");
-    }
-
-    Ok(())
-}
-
-fn chrono_now() -> String {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| {
-            // 简单时间戳
-            let secs = d.as_secs();
-            format!("{}", secs)
-        })
-        .unwrap_or_else(|_| "unknown".into())
 }
