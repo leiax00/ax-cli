@@ -36,6 +36,25 @@ fn main() -> Result<()> {
                 cli::ConfigAction::Path => commands::config::path(&config)?,
             }
         }
+        Some(cli::Commands::Env { action }) => {
+            match action {
+                cli::EnvAction::Add { name, value, desc, tags } => {
+                    let desc = desc.as_deref().unwrap_or("");
+                    let tag_vec: Vec<String> = tags.map(|t| t.split(',').map(|s| s.trim().to_string()).collect()).unwrap_or_default();
+                    commands::env::add(&name, &value, desc, &tag_vec, &config)?;
+                }
+                cli::EnvAction::Edit { name, value, desc, tags } => {
+                    let tag_vec: Option<Vec<String>> = tags.as_ref().map(|t| t.split(',').map(|s| s.trim().to_string()).collect());
+                    commands::env::edit(&name, value.as_deref(), desc.as_deref(), tag_vec.as_deref(), &config)?;
+                }
+                cli::EnvAction::Rm { names } => commands::env::rm(&names, &config)?,
+                cli::EnvAction::Show { name, tag, all } => commands::env::show(name.as_deref(), tag.as_deref(), all, &config)?,
+                cli::EnvAction::Pause { names, tag, all } => commands::env::pause(&names, tag.as_deref(), all, &config)?,
+                cli::EnvAction::Resume { names, tag, all } => commands::env::resume(&names, tag.as_deref(), all, &config)?,
+                cli::EnvAction::Load => commands::env::load(&config)?,
+                cli::EnvAction::Tags => commands::env::tags(&config)?,
+            }
+        }
         Some(cli::Commands::Add { name, cmd, desc }) => {
             commands::add::execute(&name, &cmd, &desc, &config)?;
         }
@@ -50,7 +69,7 @@ fn main() -> Result<()> {
             }
         }
         Some(cli::Commands::Rm { name }) => {
-            crate::commands::rm::execute(&name, &config)?;
+            commands::rm::execute(&name, &config)?;
         }
         Some(cli::Commands::Run { name }) => {
             commands::run::execute(name.as_deref(), &config)?;

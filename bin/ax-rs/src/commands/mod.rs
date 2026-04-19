@@ -2,6 +2,7 @@ pub mod add;
 pub mod completion;
 pub mod config;
 pub mod edit;
+pub mod env;
 pub mod info;
 pub mod install;
 pub mod list;

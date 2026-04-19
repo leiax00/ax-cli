@@ -14,6 +14,11 @@ pub enum Commands {
         #[command(subcommand)]
         action: ConfigAction,
     },
+    /// Environment variable management
+    Env {
+        #[command(subcommand)]
+        action: EnvAction,
+    },
     /// Add a custom command
     Add {
         name: String,
@@ -67,13 +72,11 @@ pub enum Commands {
 pub enum ConfigAction {
     /// Initialize config directory with defaults + git repo
     Init {
-        /// Force overwrite existing config files
         #[arg(short, long)]
         force: bool,
     },
     /// Set or show remote git repository URL
     Remote {
-        /// Remote URL (leave empty to show current)
         url: Option<String>,
     },
     /// Push config to remote (alias: ax push)
@@ -84,16 +87,13 @@ pub enum ConfigAction {
     Pull,
     /// Export config as tar.gz (-f to include ax binary)
     Export {
-        /// Include ax binary in the archive
         #[arg(short = 'f', long)]
         with_binary: bool,
-        /// Output file path (default: ax-config-<timestamp>.tar.gz)
         #[arg(short, long)]
         output: Option<String>,
     },
     /// Import config from tar.gz
     Import {
-        /// Path to archive file
         file: String,
     },
     /// Show config directory path
@@ -101,8 +101,84 @@ pub enum ConfigAction {
 }
 
 #[derive(Subcommand)]
+pub enum EnvAction {
+    /// Add environment variable (supports -t for tags)
+    Add {
+        /// Variable name
+        name: String,
+        /// Variable value
+        value: String,
+        /// Description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// Tags for grouping (comma separated, e.g. "dev,docker")
+        #[arg(short = 't', long)]
+        tags: Option<String>,
+    },
+    /// Edit environment variable
+    Edit {
+        /// Variable name
+        name: String,
+        /// New value
+        #[arg(short, long)]
+        value: Option<String>,
+        /// New description
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// New tags (comma separated)
+        #[arg(short = 't', long)]
+        tags: Option<String>,
+    },
+    /// Remove environment variable(s)
+    #[command(alias = "del")]
+    Rm {
+        /// Variable name(s)
+        names: Vec<String>,
+    },
+    /// List environment variables
+    #[command(alias = "ls")]
+    Show {
+        /// Show specific variable
+        name: Option<String>,
+        /// Filter by tag
+        #[arg(short, long)]
+        tag: Option<String>,
+        /// Show all including paused
+        #[arg(short, long)]
+        all: bool,
+    },
+    /// Pause variable(s) (won't be loaded by `ax env load`)
+    Pause {
+        /// Variable name(s)
+        names: Vec<String>,
+        /// Pause all variables with this tag
+        #[arg(short, long, conflicts_with = "all")]
+        tag: Option<String>,
+        /// Pause all variables
+        #[arg(short, long, conflicts_with = "names")]
+        all: bool,
+    },
+    /// Resume paused variable(s)
+    #[command(alias = "unpause")]
+    Resume {
+        /// Variable name(s)
+        names: Vec<String>,
+        /// Resume all variables with this tag
+        #[arg(short, long, conflicts_with = "all")]
+        tag: Option<String>,
+        /// Resume all variables
+        #[arg(short, long, conflicts_with = "names")]
+        all: bool,
+    },
+    /// Output shell export commands (use: eval $(ax env load))
+    Load,
+    /// List all tags
+    Tags,
+}
+
+#[derive(Subcommand)]
 pub enum ProxyAction {
-    /// Turn proxy on (outputs shell export to stdout, use: eval $(ax proxy on))
+    /// Turn proxy on (use: eval $(ax proxy on))
     On {
         addr: Option<String>,
     },

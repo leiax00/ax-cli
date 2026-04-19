@@ -12,6 +12,9 @@ pub struct Config {
     pub shell: ShellConfig,
     pub packages: PackagesConfig,
     pub deploy: DeployConfig,
+    /// 环境变量（可直接在 config.yaml 中定义）
+    #[serde(default)]
+    pub env: EnvMap,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -147,6 +150,22 @@ pub struct CommandEntry {
 
 pub type CommandMap = BTreeMap<String, CommandEntry>;
 
+/// 环境变量条目
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EnvEntry {
+    pub value: String,
+    #[serde(default)]
+    pub desc: String,
+    /// 标签分组（用于批量操作）
+    #[serde(default)]
+    pub tags: Vec<String>,
+    /// 是否暂停
+    #[serde(default)]
+    pub paused: bool,
+}
+
+pub type EnvMap = BTreeMap<String, EnvEntry>;
+
 /// 合并主配置的命令和 config.d/commands.yaml 的命令
 pub fn load_all_commands(config: &Config) -> Result<CommandMap> {
     let mut map = config.ax.commands.clone();
@@ -167,6 +186,29 @@ pub fn save_commands(map: &CommandMap) -> Result<()> {
     std::fs::create_dir_all(cdir.join("config.d"))?;
     let content = serde_yaml::to_string(map)?;
     std::fs::write(cdir.join("config.d").join("commands.yaml"), content)?;
+    Ok(())
+}
+
+/// 加载环境变量（合并主配置 + config.d/env.yaml）
+pub fn load_all_env(config: &Config) -> Result<EnvMap> {
+    let mut map = config.env.clone();
+    let path = config_dir().join("config.d").join("env.yaml");
+    if path.exists() {
+        let content = std::fs::read_to_string(&path)?;
+        let extra: EnvMap = serde_yaml::from_str(&content).unwrap_or_default();
+        for (k, v) in extra {
+            map.insert(k, v);
+        }
+    }
+    Ok(map)
+}
+
+/// 保存环境变量到 config.d/env.yaml
+pub fn save_env(map: &EnvMap) -> Result<()> {
+    let cdir = config_dir();
+    std::fs::create_dir_all(cdir.join("config.d"))?;
+    let content = serde_yaml::to_string(map)?;
+    std::fs::write(cdir.join("config.d").join("env.yaml"), content)?;
     Ok(())
 }
 
