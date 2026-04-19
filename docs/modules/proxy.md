@@ -2,7 +2,7 @@
 
 ## 配置文件
 
-`~/.dotfiles/bash/proxy.sh`，由 `.zshrc` 加载。
+`~/.ax/bash/proxy.sh`，由 `.zshrc` 加载。
 
 ## 用法
 
@@ -50,7 +50,7 @@ no_proxy / NO_PROXY
 
 ## 自定义
 
-编辑 `~/.dotfiles/bash/proxy.sh`，修改：
+编辑 `~/.ax/bash/proxy.sh`，修改：
 
 - `PROXY_ADDR`：默认代理地址
 - `NO_PROXY`：不代理的地址列表

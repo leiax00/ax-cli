@@ -4,8 +4,8 @@
 # 优先使用预编译 Rust 二进制，回退到 bash 版
 set -e
 
-DOTDIR="$HOME/.dotfiles"
-BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
+DOTDIR="$HOME/.ax"
+BACKUP_DIR="$HOME/.ax-backup-$(date +%Y%m%d%H%M%S)"
 
 # === 加载系统检测 ===
 source "$DOTDIR/lib/detect.sh"

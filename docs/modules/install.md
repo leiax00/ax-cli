@@ -3,8 +3,8 @@
 ## 一键部署
 
 ```bash
-git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.dotfiles
-~/.dotfiles/install.sh
+git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.ax
+~/.ax/install.sh
 exec zsh
 ```
 
@@ -35,7 +35,7 @@ exec zsh
 ### 本地编译
 
 ```bash
-cd ~/.dotfiles/bin/ax-rs
+cd ~/.ax/bin/ax-rs
 cargo build --release
 # 产物: target/release/ax
 ```
@@ -45,7 +45,7 @@ cargo build --release
 打 tag 即触发 CI/CD 自动编译和发布：
 
 ```bash
-cd ~/.dotfiles
+cd ~/.ax
 git tag v0.1.0
 git push origin v0.1.0
 ```
@@ -64,7 +64,7 @@ CI 使用 GitHub Actions / Gitea Actions（兼容）。
 
 ## 备份
 
-首次部署时，已有配置会备份到 `~/.dotfiles-backup-<时间戳>/`。
+首次部署时，已有配置会备份到 `~/.ax-backup-<时间戳>/`。
 
 ## ax update
 
@@ -84,8 +84,8 @@ ax update
 编辑对应发行版的包列表文件并提交：
 
 ```bash
-echo "新包名" >> ~/.dotfiles/packages/ubuntu.txt
-cd ~/.dotfiles && git add packages/ && git commit -m "add 新包名" && git push
+echo "新包名" >> ~/.ax/packages/ubuntu.txt
+cd ~/.ax && git add packages/ && git commit -m "add 新包名" && git push
 ```
 
 其他机器运行 `ax update` 即可安装。

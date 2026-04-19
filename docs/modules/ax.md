@@ -57,7 +57,7 @@ ax update
 ## 自动同步
 
 `ax add/edit/rm` 操作后自动：
-1. 将 `~/.ax-commands.json`（符号链接到仓库）的变更写入 `~/.dotfiles/ax-commands.json`
+1. 将 `~/.ax-commands.json`（符号链接到仓库）的变更写入 `~/.ax/ax-commands.json`
 2. 在 dotfiles 仓库中 `git commit`
 3. 后台 `git push` 到远程
 
@@ -65,8 +65,8 @@ ax update
 
 ## 存储
 
-- 命令库：`~/.dotfiles/ax-commands.json`
-- 链接：`~/.ax-commands.json` → `~/.dotfiles/ax-commands.json`
+- 命令库：`~/.ax/ax-commands.json`
+- 链接：`~/.ax-commands.json` → `~/.ax/ax-commands.json`
 - 格式：JSON，结构如下
 
 ```json
@@ -80,7 +80,7 @@ ax update
 
 ## 关闭自动同步
 
-编辑 `~/.dotfiles/bin/ax`，将 `AUTO_SYNC=true` 改为 `AUTO_SYNC=false`。
+编辑 `~/.ax/bin/ax`，将 `AUTO_SYNC=true` 改为 `AUTO_SYNC=false`。
 
 ---
 

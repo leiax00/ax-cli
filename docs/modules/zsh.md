@@ -2,7 +2,7 @@
 
 ## 配置文件
 
-`~/.dotfiles/bash/.zshrc`
+`~/.ax/bash/.zshrc`
 
 部署后链接到：`~/.zshrc`
 
@@ -61,7 +61,7 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # 大小写不敏感
 
 ## 自定义
 
-编辑 `~/.dotfiles/bash/.zshrc`，修改后 `source ~/.zshrc` 生效。
+编辑 `~/.ax/bash/.zshrc`，修改后 `source ~/.zshrc` 生效。
 
 ---
 

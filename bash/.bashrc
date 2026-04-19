@@ -8,7 +8,7 @@ shopt -s histappend
 PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 # === 自定义补全 ===
-[ -f ~/.dotfiles/bash/completions/ax ] && source ~/.dotfiles/bash/completions/ax
+[ -f ~/.ax/bash/completions/ax ] && source ~/.ax/bash/completions/ax
 
 # === fzf ===
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash

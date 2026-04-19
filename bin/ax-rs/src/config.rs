@@ -27,7 +27,7 @@ impl Default for AxConfig {
         Self {
             commands_file: "~/.ax-commands.json".into(),
             auto_sync: true,
-            repo_dir: "~/.dotfiles".into(),
+            repo_dir: "~/.ax".into(),
         }
     }
 }
@@ -92,7 +92,7 @@ pub struct PackagesConfig {
 impl Default for PackagesConfig {
     fn default() -> Self {
         Self {
-            dir: "~/.dotfiles/packages".into(),
+            dir: "~/.ax/packages".into(),
         }
     }
 }
@@ -108,8 +108,8 @@ pub struct DeployConfig {
 impl Default for DeployConfig {
     fn default() -> Self {
         Self {
-            dotfiles_dir: "~/.dotfiles".into(),
-            backup_dir: "~/.dotfiles-backup".into(),
+            dotfiles_dir: "~/.ax".into(),
+            backup_dir: "~/.ax-backup".into(),
             links: vec![
                 LinkEntry {
                     src: "bash/.zshrc".into(),

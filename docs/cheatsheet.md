@@ -76,14 +76,14 @@ cls                clear
 
 ```bash
 # 新机器（自动检测 Ubuntu/Fedora/Arch）
-git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.dotfiles
-~/.dotfiles/install.sh && exec zsh
+git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.ax
+~/.ax/install.sh && exec zsh
 
 # 更新（拉取配置 + 检查包 + 更新插件）
 ax update && exec zsh
 
 # 手动更新
-cd ~/.dotfiles && git pull && exec zsh
+cd ~/.ax && git pull && exec zsh
 ```
 
 ---

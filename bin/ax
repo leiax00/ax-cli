@@ -1,9 +1,9 @@
 #!/bin/bash
 # ax - 自定义命令管理器
-# 安装: ln -sf ~/.dotfiles/bin/ax ~/.local/bin/ax
+# 安装: ln -sf ~/.ax/bin/ax ~/.local/bin/ax
 
 AX_FILE="$HOME/.ax-commands.json"
-DOTDIR="$HOME/.dotfiles"
+DOTDIR="$HOME/.ax"
 AX_REPO_FILE="$DOTDIR/ax-commands.json"
 AUTO_SYNC=true  # 设为 false 关闭自动同步
 

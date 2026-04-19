@@ -53,7 +53,7 @@ pub fn execute(config: &Config) -> Result<()> {
 
 fn deploy_dotfiles(config: &Config, backup_dir: &str) -> Result<()> {
     println!("🔗 链接配置文件...");
-    let dotfiles_dir = crate::expand(&config.deploy.dotfiles_dir);
+    let dotfiles_dir = crate::expand(&config.deploy.ax_dir);
     let _home = crate::expand("~");
 
     for link in &config.deploy.links {

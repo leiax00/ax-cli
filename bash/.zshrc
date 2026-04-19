@@ -34,7 +34,7 @@ setopt AUTO_MENU
 setopt COMPLETE_IN_WORD
 
 # === ax 补全 ===
-[ -f ~/.dotfiles/bash/completions/ax ] && source ~/.dotfiles/bash/completions/ax
+[ -f ~/.ax/bash/completions/ax ] && source ~/.ax/bash/completions/ax
 
 # === fzf ===
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

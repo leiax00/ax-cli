@@ -2,7 +2,7 @@
 
 ## 配置文件
 
-`~/.dotfiles/wezterm/wezterm.lua`
+`~/.ax/wezterm/wezterm.lua`
 
 部署后链接到：`~/.config/wezterm/wezterm.lua`
 
@@ -65,7 +65,7 @@ Leader 键：`Ctrl+A`（与 tmux 一致）
 
 ## 自定义
 
-直接编辑 `~/.dotfiles/wezterm/wezterm.lua`，然后 `Ctrl+A r` 重载。
+直接编辑 `~/.ax/wezterm/wezterm.lua`，然后 `Ctrl+A r` 重载。
 
 常用自定义项：
 - `font_size`：字体大小

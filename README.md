@@ -5,8 +5,8 @@
 ## 快速开始
 
 ```bash
-git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.dotfiles
-~/.dotfiles/install.sh
+git clone https://anyhub.yushe.ai/leiax00/ax-system-basic.git ~/.ax
+~/.ax/install.sh
 exec zsh
 ```
 
