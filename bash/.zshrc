@@ -53,8 +53,10 @@ alias ...='cd ../..'
 alias grep='grep --color=auto'
 alias cls='clear'
 
-# === Proxy ===
-[ -f ~/.dotfiles/bash/proxy.sh ] && source ~/.dotfiles/bash/proxy.sh
+# === Proxy (via ax) ===
+pn() { eval $(ax proxy on "$1") }
+pf() { eval $(ax proxy off) }
+ps() { ax proxy status }
 
 # === 键盘绑定 ===
 bindkey -e

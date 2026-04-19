@@ -24,7 +24,7 @@ exec zsh
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| ax 命令管理器 | ✅ | 添加/编辑/删除/执行/自动补全/自动同步/环境更新 |
+| ax 命令管理器 | ✅ | Rust 重写，单二进制，零依赖，多平台 |
 | WezTerm 配置 | ✅ | Catppuccin Mocha，tmux 风格快捷键 |
 | zsh 配置 | ✅ | 自动建议、语法高亮、增强补全 |
 | Starship Prompt | ✅ | 通过 install.sh 安装 |

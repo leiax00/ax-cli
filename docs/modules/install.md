@@ -18,21 +18,49 @@ exec zsh
 | Fedora / RHEL / CentOS | dnf | `packages/fedora.txt` |
 | Arch / Manjaro | pacman | `packages/arch.txt` |
 
+## ax CLI（Rust 版）
+
+`ax` 现在是 Rust 编译的单二进制工具，零运行时依赖。
+
+### 构建平台
+
+| 平台 | 目标 | 二进制名 |
+|------|------|---------|
+| Linux x86_64 | x86_64-unknown-linux-gnu | `ax-linux-x86_64` |
+| Linux aarch64 | aarch64-unknown-linux-gnu | `ax-linux-aarch64` |
+| macOS Intel | x86_64-apple-darwin | `ax-macos-x86_64` |
+| macOS Apple Silicon | aarch64-apple-darwin | `ax-macos-aarch64` |
+| Windows | x86_64-pc-windows-msvc | `ax-windows-x86_64.exe` |
+
+### 本地编译
+
+```bash
+cd ~/.dotfiles/bin/ax-rs
+cargo build --release
+# 产物: target/release/ax
+```
+
+### 发布流程
+
+打 tag 即触发 CI/CD 自动编译和发布：
+
+```bash
+cd ~/.dotfiles
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+CI 使用 GitHub Actions / Gitea Actions（兼容）。
+
 ## install.sh 执行流程
 
-通过 `lib/` 模块按顺序执行：
-
-| 步骤 | 模块 | 内容 |
-|------|------|------|
-| 1 | `lib/packages.sh` | 安装系统包（自动检测发行版） |
-| 2 | `lib/shell.sh` | 安装 zsh |
-| 3 | `lib/shell.sh` | 切换默认 shell |
-| 4 | `lib/shell.sh` | 安装 zsh 插件 |
-| 5 | `lib/tools.sh` | 安装 fzf |
-| 6 | `lib/tools.sh` | 安装 Starship |
-| 7 | `lib/tools.sh` | 安装 JetBrains Mono Nerd Font |
-| 8 | `lib/deploy.sh` | 链接配置文件 |
-| 9 | `lib/deploy.sh` | 部署 ax 工具 + 命令库 |
+| 步骤 | 内容 |
+|------|------|
+| 1 | 安装 ax CLI（优先下载预编译二进制，回退到 bash 版） |
+| 2 | 安装系统包（自动检测发行版） |
+| 3 | 安装 zsh + 切换默认 shell + 安装插件 |
+| 4 | 安装 fzf / Starship / 字体 |
+| 5 | 链接配置文件 + 部署 ax 工具 |
 
 ## 备份
 
@@ -51,27 +79,12 @@ ax update
 4. 更新 zsh 插件
 5. 检查字体
 
-更新后运行 `exec zsh` 使配置生效。
-
-## 手动更新
-
-```bash
-cd ~/.dotfiles && git pull
-exec zsh
-```
-
 ## 新增系统包
 
 编辑对应发行版的包列表文件并提交：
 
 ```bash
-# Ubuntu
 echo "新包名" >> ~/.dotfiles/packages/ubuntu.txt
-
-# Fedora
-echo "新包名" >> ~/.dotfiles/packages/fedora.txt
-
-# 提交
 cd ~/.dotfiles && git add packages/ && git commit -m "add 新包名" && git push
 ```
 
