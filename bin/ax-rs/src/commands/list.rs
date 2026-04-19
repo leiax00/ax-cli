@@ -1,9 +1,8 @@
 use anyhow::Result;
-use crate::config::{CommandStore, Config};
+use crate::config::{Config, load_all_commands};
 
 pub fn execute(config: &Config) -> Result<()> {
-    let cmd_path = crate::expand(&config.ax.commands_file);
-    let map = CommandStore::load(&cmd_path)?;
+    let map = load_all_commands(config)?;
 
     if map.is_empty() {
         println!("📋 暂无自定义命令");
@@ -14,7 +13,6 @@ pub fn execute(config: &Config) -> Result<()> {
     println!("📋 自定义命令列表：");
     println!("──────────────────────────────────────────");
 
-    // 计算列宽
     let max_name = map.keys().map(|k| k.len()).max().unwrap_or(0);
     let max_desc = map.values().map(|v| v.desc.len()).max().unwrap_or(0);
     let name_w = max_name.max(4);

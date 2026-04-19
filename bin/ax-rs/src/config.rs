@@ -18,15 +18,17 @@ pub struct Config {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct AxConfig {
-    pub commands_file: String,
     pub auto_sync: bool,
+    /// 命令列表（直接在 config.yaml 或 config.d/commands.yaml 中配置）
+    #[serde(default)]
+    pub commands: CommandMap,
 }
 
 impl Default for AxConfig {
     fn default() -> Self {
         Self {
-            commands_file: String::new(), // 运行时填充
             auto_sync: true,
+            commands: CommandMap::new(),
         }
     }
 }
@@ -164,45 +166,27 @@ pub struct CommandEntry {
 
 pub type CommandMap = BTreeMap<String, CommandEntry>;
 
-pub struct CommandStore;
-
-impl CommandStore {
-    pub fn load(path: &Path) -> Result<CommandMap> {
-        if !path.exists() {
-            return Ok(CommandMap::new());
+/// 合并主配置的命令和 config.d/commands.yaml 的命令
+pub fn load_all_commands(config: &Config) -> Result<CommandMap> {
+    let mut map = config.ax.commands.clone();
+    let path = config_dir().join("config.d").join("commands.yaml");
+    if path.exists() {
+        let content = std::fs::read_to_string(&path)?;
+        let extra: CommandMap = serde_yaml::from_str(&content).unwrap_or_default();
+        for (k, v) in extra {
+            map.insert(k, v);
         }
-        let content = std::fs::read_to_string(path)?;
-        let map: CommandMap = serde_json::from_str(&content)?;
-        Ok(map)
     }
+    Ok(map)
+}
 
-    pub fn save(path: &Path, map: &CommandMap) -> Result<()> {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let content = serde_json::to_string_pretty(map)?;
-        std::fs::write(path, content)?;
-        Ok(())
-    }
-
-    pub fn add(map: &mut CommandMap, name: &str, cmd: &str, desc: &str) -> bool {
-        if map.contains_key(name) {
-            return false;
-        }
-        map.insert(name.into(), CommandEntry {
-            cmd: cmd.into(),
-            desc: desc.into(),
-        });
-        true
-    }
-
-    pub fn remove(map: &mut CommandMap, name: &str) -> bool {
-        map.remove(name).is_some()
-    }
-
-    pub fn get<'a>(map: &'a CommandMap, name: &str) -> Option<&'a CommandEntry> {
-        map.get(name)
-    }
+/// 保存命令到 config.d/commands.yaml
+pub fn save_commands(map: &CommandMap) -> Result<()> {
+    let cdir = config_dir();
+    std::fs::create_dir_all(cdir.join("config.d"))?;
+    let content = serde_yaml::to_string(map)?;
+    std::fs::write(cdir.join("config.d").join("commands.yaml"), content)?;
+    Ok(())
 }
 
 // ============ 配置目录 ============
@@ -311,10 +295,6 @@ impl ConfigLoader {
     /// 填充未配置的路径默认值
     fn fill_defaults(mut config: Config) -> Config {
         let cdir = config_dir();
-
-        if config.ax.commands_file.is_empty() {
-            config.ax.commands_file = format!("~/ax-commands.json");
-        }
 
         if config.packages.dir.is_empty() {
             config.packages.dir = cdir.join("packages").display().to_string();
@@ -530,8 +510,35 @@ pub const TEMPLATE_CONFIG_YAML: &str = r#"# ax-cli 配置文件
 # 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/ax-cli/
 
 ax:
-  commands_file: ~/ax-commands.json
   auto_sync: true
+  commands:
+    esp:
+      cmd: "cd ~/esp/esp-idf && . export.sh"
+      desc: "进入 ESP-IDF 开发环境"
+    dcup:
+      cmd: "docker compose up -d"
+      desc: "启动 Docker 容器"
+    dcdown:
+      cmd: "docker compose down"
+      desc: "停止 Docker 容器"
+    dps:
+      cmd: "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+      desc: "查看运行中的容器"
+    lg:
+      cmd: "lazygit"
+      desc: "打开 lazygit"
+    clean:
+      cmd: "docker system prune -af"
+      desc: "清理 Docker"
+    pn:
+      cmd: "eval $(ax proxy on)"
+      desc: "开启代理"
+    pf:
+      cmd: "eval $(ax proxy off)"
+      desc: "关闭代理"
+    ps:
+      cmd: "ax proxy status"
+      desc: "查看代理状态"
 
 proxy:
   address: "http://vpn.yushe.ai:7890"

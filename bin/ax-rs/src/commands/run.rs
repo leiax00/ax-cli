@@ -1,14 +1,13 @@
 use std::io::Write;
 use anyhow::{bail, Result};
-use crate::config::{CommandStore, Config};
+use crate::config::{Config, load_all_commands};
 
 pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
-    let cmd_path = crate::expand(&config.ax.commands_file);
-    let map = CommandStore::load(&cmd_path)?;
+    let map = load_all_commands(config)?;
 
     match name {
         Some(n) => {
-            if let Some(entry) = CommandStore::get(&map, n) {
+            if let Some(entry) = map.get(n) {
                 println!("▶ {}", entry.cmd);
                 std::process::Command::new("sh")
                     .arg("-c")
@@ -19,7 +18,6 @@ pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
             }
         }
         None => {
-            // 无参数时列出所有命令供选择
             if map.is_empty() {
                 println!("📋 暂无自定义命令");
                 return Ok(());
@@ -30,7 +28,7 @@ pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
             entries.sort_by_key(|(k, _)| *k);
 
             for (i, (name, entry)) in entries.iter().enumerate() {
-                let desc = if entry.desc.is_empty() { "无描述" } else { &entry.desc };
+                let desc = if entry.desc.is_empty() { "无描述" } else { entry.desc.as_str() };
                 println!("  {:3}) {:<20} {}", i + 1, name, desc);
             }
 
@@ -54,20 +52,15 @@ pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
                         .arg("-c")
                         .arg(&entry.cmd)
                         .status()?;
+                } else if let Some(entry) = map.get(input) {
+                    println!("▶ {}", entry.cmd);
+                    std::process::Command::new("sh")
+                        .arg("-c")
+                        .arg(&entry.cmd)
+                        .status()?;
                 } else {
-                    // 尝试按名称匹配
-                    if let Some(entry) = CommandStore::get(&map, input) {
-                        println!("▶ {}", entry.cmd);
-                        std::process::Command::new("sh")
-                            .arg("-c")
-                            .arg(&entry.cmd)
-                            .status()?;
-                    } else {
-                        bail!("❌ 无效选择: {input}");
-                    }
+                    bail!("❌ 无效选择: {input}");
                 }
-            } else {
-                bail!("❌ 无效输入: {input}");
             }
         }
     }

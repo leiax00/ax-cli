@@ -8,7 +8,6 @@ pub fn execute(config: &Config) -> Result<()> {
 
     let local_dir = expand_home(&config.repo.local_dir);
     let cdir = config_dir();
-    let cmd_path = expand_home(&config.ax.commands_file);
 
     // 确保本地仓库存在
     if !local_dir.join(".git").exists() {
@@ -18,15 +17,10 @@ pub fn execute(config: &Config) -> Result<()> {
             .output();
     }
 
-    // 同步命令库到仓库
-    if cmd_path.exists() {
-        let repo_cmd = local_dir.join("ax-commands.json");
-        std::fs::copy(&cmd_path, &repo_cmd)?;
-    }
-
-    // 同步配置到仓库
+    // 同步配置文件到仓库
     let sync_items = vec![
         ("config.yaml", "config.yaml"),
+        ("config.d/commands.yaml", "config.d/commands.yaml"),
         ("bash/.zshrc", "bash/.zshrc"),
         ("wezterm/wezterm.lua", "wezterm/wezterm.lua"),
     ];
@@ -55,8 +49,6 @@ pub fn execute(config: &Config) -> Result<()> {
     // git commit + push
     if let Ok(repo) = git2::Repository::open(&local_dir) {
         let mut index = repo.index()?;
-
-        // add all changed files
         let _ = index.add_all(&["."], git2::IndexAddOption::DEFAULT, None);
         let tree_id = index.write_tree()?;
         let tree = repo.find_tree(tree_id)?;
@@ -65,7 +57,7 @@ pub fn execute(config: &Config) -> Result<()> {
             if let Ok(parent) = head.peel_to_commit() {
                 let diff = repo.diff_tree_to_tree(Some(&parent.tree()?), Some(&tree), None)?;
                 if diff.deltas().count() == 0 {
-                    return Ok(()); // 无变更
+                    return Ok(());
                 }
 
                 let signature = repo.signature()?;
@@ -73,16 +65,16 @@ pub fn execute(config: &Config) -> Result<()> {
                     Some("refs/heads/main"),
                     &signature,
                     &signature,
-                    "sync: ax-cli config and commands",
+                    "sync: ax-cli config",
                     &tree,
                     &[&parent],
                 )?;
 
-                let local_dir_clone = local_dir.clone();
+                let dir_clone = local_dir.clone();
                 std::thread::spawn(move || {
                     let _ = std::process::Command::new("git")
                         .args(["push", "--quiet"])
-                        .current_dir(&local_dir_clone)
+                        .current_dir(&dir_clone)
                         .output();
                 });
 

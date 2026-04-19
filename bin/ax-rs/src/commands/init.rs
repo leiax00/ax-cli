@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::config::{Config, CommandStore, expand_home, config_dir, TEMPLATE_CONFIG_YAML, TEMPLATE_ZSHRC, TEMPLATE_WEZTERM};
+use crate::config::{Config, config_dir, TEMPLATE_CONFIG_YAML, TEMPLATE_ZSHRC, TEMPLATE_WEZTERM};
 
 pub fn execute(force: bool, _config: &Config) -> Result<()> {
     let cdir = config_dir();
@@ -48,7 +48,7 @@ pub fn execute(force: bool, _config: &Config) -> Result<()> {
         println!("   ⏭️  wezterm/wezterm.lua 已存在");
     }
 
-    // 5. 写入默认包列表（根据当前系统）
+    // 5. 写入默认包列表
     let pkg_file = cdir.join("packages").join(format!("{}.txt", crate::detect::os_id()));
     if !pkg_file.exists() {
         let default_pkgs = match crate::detect::os_id().as_str() {
@@ -61,15 +61,6 @@ pub fn execute(force: bool, _config: &Config) -> Result<()> {
         println!("   ✅ packages/{}.txt", crate::detect::os_id());
     } else {
         println!("   ⏭️  packages/{}.txt 已存在", crate::detect::os_id());
-    }
-
-    // 6. 创建命令库
-    let cmd_file = expand_home("~/ax-commands.json");
-    if !cmd_file.exists() {
-        CommandStore::save(&cmd_file, &CommandStore::load(&cmd_file)?)?;
-        println!("   ✅ ax-commands.json");
-    } else {
-        println!("   ⏭️  ax-commands.json 已存在");
     }
 
     println!("");
