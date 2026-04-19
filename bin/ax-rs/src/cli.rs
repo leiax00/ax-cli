@@ -32,7 +32,11 @@ pub enum Commands {
     },
     /// List all commands
     #[command(alias = "ls")]
-    List,
+    List {
+        /// Only output command names (for completion scripts)
+        #[arg(long, hide(true))]
+        quiet: bool,
+    },
     /// Remove a command
     #[command(alias = "del")]
     Rm {
@@ -59,6 +63,11 @@ pub enum Commands {
     },
     /// Show current config and paths
     Info,
+    /// Generate shell completion script
+    Completion {
+        /// Shell type (bash, zsh, powershell)
+        shell: String,
+    },
 }
 
 #[derive(Subcommand)]

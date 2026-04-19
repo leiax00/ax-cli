@@ -26,3 +26,12 @@ pub fn execute(config: &Config) -> Result<()> {
     println!("──────────────────────────────────────────");
     Ok(())
 }
+
+/// 只输出命令名，供补全脚本调用
+pub fn execute_quiet(config: &Config) -> Result<()> {
+    let map = load_all_commands(config)?;
+    for name in map.keys() {
+        println!("{name}");
+    }
+    Ok(())
+}

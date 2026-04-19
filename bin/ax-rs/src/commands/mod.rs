@@ -1,8 +1,9 @@
 pub mod add;
+pub mod completion;
 pub mod edit;
 pub mod init;
-pub mod install;
 pub mod info;
+pub mod install;
 pub mod list;
 pub mod pull;
 pub mod proxy;

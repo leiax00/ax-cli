@@ -32,8 +32,12 @@ fn main() -> Result<()> {
         Some(cli::Commands::Edit { name }) => {
             commands::edit::execute(&name, &config)?;
         }
-        Some(cli::Commands::List) => {
-            commands::list::execute(&config)?;
+        Some(cli::Commands::List { quiet }) => {
+            if quiet {
+                commands::list::execute_quiet(&config)?;
+            } else {
+                commands::list::execute(&config)?;
+            }
         }
         Some(cli::Commands::Rm { name }) => {
             commands::rm::execute(&name, &config)?;
@@ -58,6 +62,9 @@ fn main() -> Result<()> {
         }
         Some(cli::Commands::Info) => {
             commands::info::execute(&config)?;
+        }
+        Some(cli::Commands::Completion { shell }) => {
+            commands::completion::execute(&shell, &config)?;
         }
         None => {
             commands::run::execute(None, &config)?;
