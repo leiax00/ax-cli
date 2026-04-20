@@ -1,0 +1,17 @@
+[core]
+git
+curl
+zsh
+unzip
+fontconfig
+
+[extras]
+jq
+fzf
+wget
+tree
+htop
+ripgrep
+fd-find
+bat
+tmux

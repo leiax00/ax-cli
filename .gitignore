@@ -1,5 +1,8 @@
+# Rust
+/target/
+Cargo.lock
+
 # 编辑器
-.gitconfig
 *.swp
 *.swo
 *~
@@ -8,6 +11,11 @@
 .DS_Store
 Thumbs.db
 
-# 敏感信息（按需添加）
+# 敏感信息
 *.log
 *.tmp
+
+.idea
+.claude/plans
+.claude/settings.*.json
+.codex

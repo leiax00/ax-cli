@@ -28,13 +28,10 @@ ax 二进制（纯工具，不含配置）
 curl -fLo ~/.local/bin/ax https://anyhub.yushe.ai/.../ax-linux-x86_64
 chmod +x ~/.local/bin/ax
 
-# 2. 初始化配置（自动生成默认配置 + git init）
-ax config init
-
-# 3. 安装
+# 2. 安装（首次运行会自动初始化配置）
 ax install
 
-# 4. 重启终端
+# 3. 重启终端
 exec zsh
 ```
 
@@ -71,9 +68,10 @@ ax run [名]                      # 执行
 ax <名>                          # 快捷执行
 
 # 系统管理
-ax install                       # 一键安装（包+工具+配置部署）
+ax install                       # 安装 core 包 + 工具 + 配置部署
+ax install --extras              # 额外安装开发增强包
 ax push / pull                   # 配置同步快捷方式
-ax proxy on/off/status           # 代理管理
+ax proxy on/off/status           # 代理管理（加载 ax shell 配置后可直接生效）
 ax completion bash/zsh/powershell # 安装 shell 补全
 ax info                          # 查看当前配置
 ```
@@ -86,7 +84,8 @@ ax info                          # 查看当前配置
 ├── config.d/                  # 分块配置（自动合并）
 │   ├── commands.yaml          # 用户动态命令
 │   └── env.yaml               # 用户动态环境变量
-├── bash/.zshrc                # shell 配置
+├── bash/.bashrc               # bash 配置片段（由 ~/.bashrc 引入）
+├── bash/.zshrc                # zsh 配置片段（由 ~/.zshrc 引入）
 ├── wezterm/wezterm.lua        # 终端配置
 ├── packages/                  # 包列表
 │   └── ubuntu.txt
@@ -113,6 +112,7 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 | Arch / Manjaro | pacman | `packages/arch.txt` |
 
 自动检测系统，无需手动选择。
+包作用说明见 `docs/packages.md`。
 
 ## 实现状态
 
@@ -127,8 +127,8 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 | 配置导入导出 | ✅ | 跨机器迁移，含二进制的便携包 |
 | WezTerm 配置 | ✅ | Catppuccin Mocha，tmux 风格快捷键 |
 | zsh 配置 | ✅ | 自动建议、语法高亮、增强补全 |
-| Starship Prompt | ✅ | 通过 install.sh 安装 |
-| fzf 模糊搜索 | ✅ | 通过 install.sh 安装 |
+| Starship Prompt | ✅ | 通过 ax install 安装 |
+| fzf 模糊搜索 | ✅ | 通过 ax install 安装 |
 | CI/CD | ✅ | GitHub Actions + Gitea Actions |
 | Git 配置 | 🔲 | 需要填充 .gitconfig |
 | tmux 配置 | 🔲 | 预留 |
@@ -136,7 +136,6 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 ## 编译
 
 ```bash
-cd bin/ax-rs
 cargo build --release
 # 产物: target/release/ax (~4.6MB)
 ```
@@ -145,26 +144,29 @@ cargo build --release
 
 ```
 ax-system-basic/
-├── bin/ax-rs/                 # Rust 源码
-│   ├── Cargo.toml
-│   └── src/
-│       ├── main.rs
-│       ├── cli.rs             # 命令定义
-│       ├── config.rs          # 配置加载/保存
-│       ├── detect.rs          # 系统检测
-│       ├── commands/          # 各子命令实现
-│       ├── packages.rs
-│       ├── shell.rs
-│       └── tools.rs
-├── install.sh                 # 一键部署（下载二进制+安装包+部署配置）
-├── .github/workflows/         # CI/CD
+├── Cargo.toml                  # Rust 项目配置
+├── src/                        # Rust 源码
+│   ├── main.rs                 # 入口
+│   ├── cli.rs                  # 命令定义（clap）
+│   ├── config.rs               # 配置加载/保存/模板
+│   ├── detect.rs               # 系统检测
+│   ├── packages.rs             # 包管理
+│   ├── shell.rs                # zsh + 插件
+│   ├── tools.rs                # fzf/starship/字体
+│   └── commands/               # 各子命令实现
+├── config/                     # 配置模板（ax config init 使用）
+│   ├── bash/
+│   ├── wezterm/
+│   ├── packages/
+│   └── git/
+├── install/                    # 安装脚本
+│   ├── install-ax.sh
+│   ├── install-ax.ps1
+│   └── npm/
+├── .github/workflows/          # CI/CD
 ├── .gitea/workflows/
-└── docs/                      # 文档
+└── docs/                       # 文档
 ```
-
-## 详细文档
-
-详见 [`docs/`](./docs/) 目录。
 
 ## 许可
 
