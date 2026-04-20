@@ -46,7 +46,7 @@ pub fn check_font() -> Result<()> {
     let output = std::process::Command::new("fc-list").output()?;
     let fc_output = String::from_utf8_lossy(&output.stdout);
 
-    if fc_output.contains("JetBrains Mono") {
+    if fc_output.contains("JetBrainsMono") {
         println!("  ⏭️  字体已存在");
     } else {
         let font_dir = crate::expand("~/.local/share/fonts");
