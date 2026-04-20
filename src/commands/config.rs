@@ -63,7 +63,7 @@ pub fn init(force: bool, _config: &Config) -> Result<()> {
     let git_dir = cdir.join(".git");
     if !git_dir.exists() {
         let _ = std::process::Command::new("git")
-            .args(["init"])
+            .args(["init", "-b", "main"])
             .current_dir(&cdir)
             .output();
         // 创建 .gitignore
@@ -140,30 +140,82 @@ pub fn push(_config: &Config) -> Result<()> {
         anyhow::bail!("配置目录未初始化，请先运行 ax config init");
     }
 
-    // git add + commit + push
-    let _ = std::process::Command::new("git")
+    // git add
+    let add_output = std::process::Command::new("git")
         .args(["add", "-A"])
         .current_dir(&cdir)
-        .output();
+        .output()
+        .context("git add 失败")?;
+    if !add_output.status.success() {
+        anyhow::bail!(
+            "git add 失败: {}",
+            String::from_utf8_lossy(&add_output.stderr)
+        );
+    }
 
-    // 检查是否有变更
-    let output = std::process::Command::new("git")
+    // 检查是否有暂存变更，有则提交
+    let has_changes = !std::process::Command::new("git")
         .args(["diff", "--cached", "--quiet"])
         .current_dir(&cdir)
-        .output();
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
 
-    if output.is_ok() && output.unwrap().status.success() {
-        println!("⏭️  没有变更需要提交");
+    if has_changes {
+        let commit_output = std::process::Command::new("git")
+            .args(["commit", "-m", "sync: ax-cli config"])
+            .current_dir(&cdir)
+            .output();
+
+        if commit_output.is_err() || !commit_output.as_ref().unwrap().status.success() {
+            let stderr = match &commit_output {
+                Err(e) => e.to_string(),
+                Ok(o) => String::from_utf8_lossy(&o.stderr).to_string(),
+            };
+            anyhow::bail!("提交失败: {stderr}");
+        }
+    }
+
+    // 检查是否有未推送的提交
+    let has_unpushed = std::process::Command::new("git")
+        .args(["log", "@{u}..HEAD", "--oneline"])
+        .stderr(std::process::Stdio::null())
+        .current_dir(&cdir)
+        .output()
+        .map(|o| !String::from_utf8_lossy(&o.stdout).trim().is_empty())
+        .unwrap_or(false);
+
+    // 无新提交且无未推送的提交
+    if !has_changes && !has_unpushed {
+        println!("⏭️  没有变更需要推送");
         return Ok(());
     }
 
-    let _ = std::process::Command::new("git")
-        .args(["commit", "-m", "sync: ax-cli config"])
+    // 获取当前分支名
+    let branch_output = std::process::Command::new("git")
+        .args(["branch", "--show-current"])
         .current_dir(&cdir)
-        .output();
+        .output()
+        .context("获取当前分支失败")?;
+    let branch = String::from_utf8_lossy(&branch_output.stdout).trim().to_string();
+
+    // 检查是否有 upstream
+    let has_upstream = std::process::Command::new("git")
+        .args(["rev-parse", "--abbrev-ref", "@{u}"])
+        .stderr(std::process::Stdio::null())
+        .current_dir(&cdir)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    let push_args = if has_upstream {
+        vec!["push", "origin", "HEAD"]
+    } else {
+        vec!["push", "-u", "origin", &branch]
+    };
 
     let output = std::process::Command::new("git")
-        .args(["push", "origin", "HEAD"])
+        .args(&push_args)
         .current_dir(&cdir)
         .output();
 
@@ -172,13 +224,9 @@ pub fn push(_config: &Config) -> Result<()> {
     } else {
         let o = output.unwrap();
         let stderr = String::from_utf8_lossy(&o.stderr);
-        if stderr.contains("no upstream") || stderr.contains("fatal") {
-            println!("⚠️  推送失败，可能需要先设置远程仓库：");
+        if stderr.contains("no remote") {
+            println!("⚠️  推送失败，请先设置远程仓库：");
             println!("   ax config remote <url>");
-            println!(
-                "   或首次推送：git -C {} push -u origin main",
-                cdir.display()
-            );
         } else {
             println!("⚠️  推送失败: {stderr}");
         }

@@ -52,7 +52,7 @@ src/
 
 `config.yaml` 定义部署链接、包列表路径等；`config.d/` 下 `commands.yaml` 和 `env.yaml` 存储用户动态数据。配置支持深合并和环境变量替换。
 
-`config.rs` 内置了所有配置模板（`TEMPLATE_ZSHRC`、`TEMPLATE_WEZTERM`、`TEMPLATE_CONFIG_YAML`），`ax config init` 时写入用户配置目录。
+`config.rs` 通过 `include_str!` 从 `config/` 目录嵌入 shell/wezterm 模板（`TEMPLATE_ZSHRC`、`TEMPLATE_BASHRC`、`TEMPLATE_WEZTERM`），`TEMPLATE_CONFIG_YAML` 为代码内嵌。`ax config init` 时写入用户配置目录。
 
 ### 多发行版支持
 

@@ -96,12 +96,12 @@ proxy:
 
 `config.rs` 中定义了以下配置模板（`ax config init` 时写入）：
 
-| 模板常量 | 生成文件 | 内容 |
-|---------|---------|------|
-| `TEMPLATE_CONFIG_YAML` | `config.yaml` | 主配置示例 |
-| `TEMPLATE_ZSHRC` | 部署为 `~/.zshrc` | zsh 配置（历史、补全、fzf、别名、代理） |
-| `TEMPLATE_BASHRC` | 部署为 `~/.bashrc` | bash 配置（类似 zshrc） |
-| `TEMPLATE_WEZTERM` | 部署为 `~/.config/wezterm/wezterm.lua` | WezTerm 终端配置 |
+| 模板常量 | 生成文件 | 内容 | 来源 |
+|---------|---------|------|------|
+| `TEMPLATE_CONFIG_YAML` | `config.yaml` | 主配置示例 | 代码内嵌 |
+| `TEMPLATE_ZSHRC` | 部署为 `~/.zshrc` | zsh 配置（历史、补全、fzf、别名、代理） | `config/bash/.zshrc` |
+| `TEMPLATE_BASHRC` | 部署为 `~/.bashrc` | bash 配置（类似 zshrc） | `config/bash/.bashrc` |
+| `TEMPLATE_WEZTERM` | 部署为 `~/.config/wezterm/wezterm.lua` | WezTerm 终端配置 | `config/wezterm/wezterm.lua` |
 
 ## 配置同步机制
 
