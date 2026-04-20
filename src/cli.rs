@@ -179,7 +179,11 @@ pub enum EnvAction {
 #[derive(Subcommand)]
 pub enum ProxyAction {
     /// 开启代理（bash/zsh: eval "$(ax proxy on)"）
-    On { addr: Option<String> },
+    On {
+        /// 代理地址，留空使用配置中的默认地址
+        #[arg()]
+        addr: Option<String>,
+    },
     /// 关闭代理（bash/zsh: eval "$(ax proxy off)"）
     Off,
     /// 显示代理状态
