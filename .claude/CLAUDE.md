@@ -70,3 +70,23 @@ src/
 - CLI 框架：clap derive 模式，命令定义集中在 `cli.rs`
 - 配置格式：YAML（serde_yaml）
 - 新增命令：在 `cli.rs` 加枚举变体 → `commands/` 加实现文件 → `main.rs` 路由
+
+## 文档体系（强制规则）
+
+完整文档位于 `docs/`，采用渐进式披露组织。
+
+**修改任何模块前，必须先阅读对应的设计文档：**
+
+| 修改范围 | 必读文档 |
+|---------|---------|
+| CLI 命令 | `docs/03-design/command-system.md` |
+| 配置系统 | `docs/03-design/config-system.md` |
+| 安装流程 | `docs/03-design/install-flow.md` |
+| 环境变量 | `docs/03-design/env-management.md` |
+| 代理功能 | `docs/03-design/proxy-system.md` |
+| 平台支持 | `docs/03-design/platform-support.md` |
+| 包列表 | `docs/03-design/packages.md` |
+| 模块依赖 | `docs/04-architecture/module-dependencies.md` |
+| 新增功能 | `docs/04-architecture/extension-guide.md` |
+
+**修改代码后，必须同步更新受影响的文档。** 如果代码行为与文档不一致，更新文档使其反映实际实现。详细规则见 `docs/01-standards/doc-first-rule.md`。
