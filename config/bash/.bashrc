@@ -17,6 +17,14 @@ shopt -s histappend
 PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 # === 自定义补全 ===
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+  source /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+  source /etc/bash_completion
+elif [ -f "$HOME/.local/share/bash-completion/bash_completion" ]; then
+  source "$HOME/.local/share/bash-completion/bash_completion"
+fi
+
 [ -f ~/.ax/bash/completions/ax ] && source ~/.ax/bash/completions/ax
 
 # === fzf ===

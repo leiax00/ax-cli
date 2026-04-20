@@ -1,6 +1,8 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
 
+local maximized = {}
+
 -- === 主题 ===
 local theme = 'Catppuccin Mocha'
 
@@ -15,7 +17,7 @@ local config = {
   window_background_opacity = 0.92,
   text_background_opacity = 0.92,
   -- NONE可以隐藏header
-  window_decorations = "RESIZE",
+  window_decorations = "NONE",
   hide_tab_bar_if_only_one_tab = false,
   enable_tab_bar = true,
   tab_bar_at_bottom = true,
@@ -84,6 +86,9 @@ config.keys = {
   { key = '-', mods = 'CTRL', action = act.DecreaseFontSize },
   { key = '0', mods = 'CTRL', action = act.ResetFontSize },
 
+  -- 窗口
+  { key = 'F11', mods = 'NONE', action = act.EmitEvent 'toggle_maximize' },
+
   -- 重载配置
   { key = 'r', mods = 'LEADER', action = act.ReloadConfiguration },
 }
@@ -102,8 +107,23 @@ wezterm.on('update-status', function(window, pane)
   window:set_right_status(wezterm.format {
     { Foreground = { Color = '#cdd6f4' } },
     { Background = { Color = '#1e1e2e' } },
-    { Text = ' ' .. pane:get_current_working_dir() .. ' ' },
+    { Text = ' ' .. wezterm.format_path(pane:get_current_working_dir()) .. ' ' },
   })
+end)
+
+wezterm.on('toggle_maximize', function(window, pane)
+  local id = window:window_id()
+  if maximized[id] then
+    window:restore()
+    maximized[id] = nil
+  else
+    window:maximize()
+    maximized[id] = true
+  end
+end)
+
+wezterm.on('window-closed', function(window, pane)
+  maximized[window:window_id()] = nil
 end)
 
 return config
