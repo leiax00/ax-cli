@@ -16,7 +16,8 @@ local config = {
   text_background_opacity = 0.92,
   -- NONE可以隐藏header
   window_decorations = "RESIZE",
-  hide_tab_bar_if_only_one_tab = true,
+  hide_tab_bar_if_only_one_tab = false,
+  enable_tab_bar = true,
   tab_bar_at_bottom = true,
   use_fancy_tab_bar = true,
   tab_max_width = 32,
@@ -43,6 +44,7 @@ config.keys = {
   { key = 'a', mods = 'LEADER|CTRL', action = act.SendKey { key = 'a', mods = 'CTRL' } },
 
   -- 标签页
+  { key = 't', mods = 'CTRL', action = act.ShowTabNavigator },
   { key = 'c', mods = 'LEADER', action = act.SpawnTab 'CurrentPaneDomain' },
   { key = 'n', mods = 'LEADER', action = act.ActivateTabRelative(1) },
   { key = 'p', mods = 'LEADER', action = act.ActivateTabRelative(-1) },

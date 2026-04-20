@@ -8,7 +8,7 @@ pub fn execute(config: &Config, extras: bool) -> Result<()> {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs().to_string())
         .unwrap_or_else(|_| "0".into());
-    let backup_dir = expand_home(&format!("~/.ax-backup-{}", ts));
+    let backup_dir = config_dir().join("backup").join(&ts);
 
     ensure_config_initialized(config)?;
 
