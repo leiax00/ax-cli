@@ -37,6 +37,15 @@ exec zsh
 
 **不需要 clone 源码仓库**，配置模板全部内置在二进制里。
 
+如果是源码方式更新补全与说明文案，执行：
+
+```bash
+cargo build --release
+cp target/release/ax ~/.local/bin/ax
+ax completion zsh
+exec zsh
+```
+
 ## 命令总览
 
 ```bash
@@ -74,6 +83,50 @@ ax push / pull                   # 配置同步快捷方式
 ax proxy on/off/status           # 代理管理（加载 ax shell 配置后可直接生效）
 ax completion bash/zsh/powershell # 安装 shell 补全
 ax info                          # 查看当前配置
+```
+
+## Shell 体验
+
+- `ax completion zsh` / `ax completion bash` 会安装对应 shell 的命令补全
+- `ax install` 会自动刷新托管 shell 配置，并安装 zsh / bash 补全
+- 补全由 `clap` 命令树自动生成，支持多层子命令，不需要手工维护层级
+- zsh 下会显示命令说明；安装并加载 `zsh-autosuggestions` 后，还能得到基于历史命令的灰显预测
+
+常见示例：
+
+```bash
+ax <Tab>
+ax config <Tab>
+ax env <Tab>
+ax env add --<Tab>
+ax proxy <Tab>
+```
+
+如果补全没有立即生效，可手动执行：
+
+```bash
+source ~/.config/axconfig/bash/.zshrc
+autoload -Uz compinit && compinit
+```
+
+如果使用 bash：
+
+```bash
+source ~/.config/axconfig/bash/.bashrc
+```
+
+## 语言与本地化
+
+- `ax --help` 与 shell 补全说明支持中文和英文
+- 语言选择顺序：`AX_LANG` > `LC_ALL` > `LC_MESSAGES` > `LANG` > 默认中文
+- 当前支持 `zh` / `en`
+
+示例：
+
+```bash
+ax --help
+AX_LANG=en ax --help
+AX_LANG=en ax completion zsh
 ```
 
 ## 配置目录结构
@@ -123,10 +176,11 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 | 命令管理 | ✅ | CRUD + 自动同步 + shell 补全 |
 | 环境变量管理 | ✅ | 标签分组，暂停/恢复，eval 加载 |
 | 代理管理 | ✅ | eval $(ax proxy on) |
-| Shell 补全 | ✅ | bash/zsh/powershell |
+| Shell 补全 | ✅ | 基于 clap 自动生成，支持多层子命令与 zsh 说明 |
+| Help 多语言 | ✅ | 根据 AX_LANG / LANG 自动切换中文或英文 |
 | 配置导入导出 | ✅ | 跨机器迁移，含二进制的便携包 |
 | WezTerm 配置 | ✅ | Catppuccin Mocha，tmux 风格快捷键 |
-| zsh 配置 | ✅ | 自动建议、语法高亮、增强补全 |
+| zsh 配置 | ✅ | 自动建议、语法高亮、增强补全、灰显历史预测 |
 | Starship Prompt | ✅ | 通过 ax install 安装 |
 | fzf 模糊搜索 | ✅ | 通过 ax install 安装 |
 | CI/CD | ✅ | GitHub Actions + Gitea Actions |

@@ -2,7 +2,11 @@
 
 ## 概述
 
-ax-cli 使用 clap derive 模式定义 CLI 结构，通过枚举路由到各命令实现模块。
+ax-cli 使用 clap derive 模式定义 CLI 结构，通过枚举路由到各命令实现模块。运行时会基于语言环境生成本地化后的命令树，该命令树同时用于：
+
+- 命令行参数解析
+- `--help` 文案展示
+- shell 补全脚本生成
 
 ## CLI 结构定义
 
@@ -55,6 +59,16 @@ Cli (顶层)
 - `Commands::Env(action)` → `commands::env::execute(action)`
 - `Commands::Proxy(action)` → `commands::proxy::execute(action)`
 - 其他 → 对应模块函数
+
+## 本地化命令树
+
+`src/cli.rs` 除了静态 derive 定义，还提供：
+
+- `current_language()`：从 `AX_LANG`、`LC_ALL`、`LC_MESSAGES`、`LANG` 推断语言
+- `localized_command()`：生成带本地化说明的 `clap::Command`
+- `parse()`：使用本地化命令树进行参数解析
+
+当前支持中文和英文两套命令说明。
 
 ## 新增命令的三步模式
 

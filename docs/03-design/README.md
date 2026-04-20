@@ -6,6 +6,7 @@
 |------|------|------|
 | [config-system.md](config-system.md) | 配置系统：层级合并、模板、存储结构 | 开发 |
 | [command-system.md](command-system.md) | 命令系统：CLI 定义、路由、扩展模式 | 开发 |
+| [completion-i18n.md](completion-i18n.md) | 补全与本地化：多层补全、语言自动切换 | 开发 |
 | [install-flow.md](install-flow.md) | 安装流程：包/工具/配置部署的完整流水线 | 开发 |
 | [env-management.md](env-management.md) | 环境变量管理：标签、暂停恢复、多 shell | 开发 |
 | [proxy-system.md](proxy-system.md) | 代理系统：shell 适配、状态管理 | 开发 |

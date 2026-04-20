@@ -19,6 +19,7 @@ docs/
 ├── 03-design/             ← 技术设计（各模块详细设计）
 │   ├── config-system.md
 │   ├── command-system.md
+│   ├── completion-i18n.md
 │   ├── install-flow.md
 │   ├── env-management.md
 │   ├── proxy-system.md
@@ -39,6 +40,7 @@ docs/
 | 了解使用场景 | [user-stories.md](02-product/user-stories.md) |
 | 了解整体架构 | [overview.md](04-architecture/overview.md) |
 | 修改配置相关代码 | [config-system.md](03-design/config-system.md) |
+| 查看补全与多语言实现 | [completion-i18n.md](03-design/completion-i18n.md) |
 | 添加新命令 | [extension-guide.md](04-architecture/extension-guide.md) |
 | 添加新平台支持 | [platform-support.md](03-design/platform-support.md) |
 | 修改安装流程 | [install-flow.md](03-design/install-flow.md) |

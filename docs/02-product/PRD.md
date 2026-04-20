@@ -61,6 +61,15 @@
 ### 3.7 Shell 补全 (`ax completion`)
 
 - 生成 bash / zsh / PowerShell 补全脚本
+- 补全基于真实命令树生成，支持多层子命令
+- zsh 可显示命令与参数说明
+- `ax install` 默认自动安装 zsh / bash 补全
+
+### 3.8 Help 与补全多语言
+
+- `ax --help` 与补全说明支持中文 / 英文
+- 自动读取 `AX_LANG`、`LC_ALL`、`LC_MESSAGES`、`LANG`
+- 未设置时默认中文
 
 ## 4. 多平台支持
 
@@ -98,5 +107,6 @@
 
 - Rust edition 2021，使用 stable 工具链
 - 依赖保持精简：clap、serde、serde_yaml、anyhow、dirs、which、git2、regex、log
+- 允许为 CLI 补全引入 `clap_complete`
 - 不引入数据库或守护进程
 - 配置格式固定为 YAML

@@ -39,8 +39,10 @@ ax install
   │    └─ source 相对于配置根目录
   │
   └─ 6. Shell 集成
-       ├─ 在 .zshrc 中添加 source 语句（如果不存在）
-       └─ 确保 ax 命令可用
+       ├─ 刷新托管的 bash/.zshrc 和 bash/.bashrc
+       ├─ 安装 zsh / bash 补全脚本
+       ├─ 在 .zshrc / .bashrc 中添加 source 语句（如果不存在）
+       └─ 确保 ax 命令与补全可用
 ```
 
 ## 幂等性保证
@@ -53,6 +55,7 @@ ax install
 - **工具**：`which fzf` / `which starship` 检查
 - **字体**：`fc-list` 匹配检查
 - **部署**：symlink 已存在且指向正确则跳过
+- **补全**：重复执行会覆盖补全脚本并刷新托管 shell 片段
 
 ## 包列表格式
 
@@ -88,3 +91,4 @@ tmux
 | `src/shell.rs` | zsh 安装、默认 shell 设置、插件管理 |
 | `src/tools.rs` | fzf、starship、Nerd Font 安装 |
 | `src/commands/install.rs` | 流水线编排 |
+| `src/commands/completion.rs` | 生成并安装 shell 补全 |
