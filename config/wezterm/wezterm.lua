@@ -8,10 +8,13 @@ local config = {
   -- 基础外观
   color_scheme = theme,
   font = wezterm.font 'JetBrains Mono Nerd Font',
-  font_size = 14,
+  font_size = 10,
+  initial_cols = 150,
+  initial_rows = 36,
   line_height = 1.2,
   window_background_opacity = 0.92,
   text_background_opacity = 0.92,
+  -- NONE可以隐藏header
   window_decorations = "RESIZE",
   hide_tab_bar_if_only_one_tab = true,
   tab_bar_at_bottom = true,
@@ -33,7 +36,7 @@ local config = {
 }
 
 -- === 快捷键 (Leader: Ctrl+A) ===
-config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 5000 }
 
 config.keys = {
   -- Leader + a → 发送 Ctrl+A (tmux 兼容)
@@ -51,7 +54,7 @@ config.keys = {
   { key = '5', mods = 'LEADER', action = act.ActivateTab(4) },
 
   -- 分屏
-  { key = '|', mods = 'LEADER|SHIFT', action = act.SplitHorizontal { domain = 'CurrentPaneDomain' } },
+  { key = '\\', mods = 'LEADER', action = act.SplitHorizontal { domain = 'CurrentPaneDomain' } },
   { key = '-', mods = 'LEADER', action = act.SplitVertical { domain = 'CurrentPaneDomain' } },
   { key = 'h', mods = 'LEADER', action = act.ActivatePaneDirection 'Left' },
   { key = 'j', mods = 'LEADER', action = act.ActivatePaneDirection 'Down' },

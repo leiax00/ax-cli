@@ -58,7 +58,231 @@ fn build_script(shell: &str) -> Result<String> {
         _ => anyhow::bail!("不支持的 shell: {shell}\n支持: bash, zsh, powershell"),
     }
 
-    Ok(String::from_utf8(buf)?)
+    let script = String::from_utf8(buf)?;
+
+    match shell {
+        "zsh" | "z" => Ok(post_process_zsh_script(&script)),
+        _ => Ok(script),
+    }
+}
+
+fn post_process_zsh_script(script: &str) -> String {
+    let replacements = [
+        (
+            ":name -- 变量名:_default",
+            ":name -- 变量名:_message -r \"变量名\"",
+        ),
+        (
+            ":value -- 变量值:_default",
+            ":value -- 变量值:_message -r \"变量值\"",
+        ),
+        (
+            "-d+[变量描述]:DESC:_default",
+            "-d+[变量描述]:DESC:_message -r \"变量描述\"",
+        ),
+        (
+            "--desc=[变量描述]:DESC:_default",
+            "--desc=[变量描述]:DESC:_message -r \"变量描述\"",
+        ),
+        (
+            "-t+[标签，使用逗号分隔]:TAGS:_default",
+            "-t+[标签，使用逗号分隔]:TAGS:_message -r \"标签，使用逗号分隔\"",
+        ),
+        (
+            "--tags=[标签，使用逗号分隔]:TAGS:_default",
+            "--tags=[标签，使用逗号分隔]:TAGS:_message -r \"标签，使用逗号分隔\"",
+        ),
+        (
+            ":name -- 仅显示指定变量:_default",
+            ":name -- 仅显示指定变量:_message -r \"变量名\"",
+        ),
+        (
+            "-t+[按标签筛选]:TAG:_default",
+            "-t+[按标签筛选]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "--tag=[按标签筛选]:TAG:_default",
+            "--tag=[按标签筛选]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "(-a --all)-t+[暂停指定标签下的全部变量]:TAG:_default",
+            "(-a --all)-t+[暂停指定标签下的全部变量]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "(-a --all)--tag=[暂停指定标签下的全部变量]:TAG:_default",
+            "(-a --all)--tag=[暂停指定标签下的全部变量]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "(-a --all)-t+[恢复指定标签下的全部变量]:TAG:_default",
+            "(-a --all)-t+[恢复指定标签下的全部变量]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "(-a --all)--tag=[恢复指定标签下的全部变量]:TAG:_default",
+            "(-a --all)--tag=[恢复指定标签下的全部变量]:TAG:_message -r \"标签\"",
+        ),
+        (
+            "*::names -- 一个或多个变量名:_default",
+            "*::names -- 一个或多个变量名:_message -r \"变量名\"",
+        ),
+        (
+            "-v+[新值]:VALUE:_default",
+            "-v+[新值]:VALUE:_message -r \"新值\"",
+        ),
+        (
+            "--value=[新值]:VALUE:_default",
+            "--value=[新值]:VALUE:_message -r \"新值\"",
+        ),
+        (
+            "-d+[新描述]:DESC:_default",
+            "-d+[新描述]:DESC:_message -r \"新描述\"",
+        ),
+        (
+            "--desc=[新描述]:DESC:_default",
+            "--desc=[新描述]:DESC:_message -r \"新描述\"",
+        ),
+        (
+            "-t+[新标签，使用逗号分隔]:TAGS:_default",
+            "-t+[新标签，使用逗号分隔]:TAGS:_message -r \"新标签，使用逗号分隔\"",
+        ),
+        (
+            "--tags=[新标签，使用逗号分隔]:TAGS:_default",
+            "--tags=[新标签，使用逗号分隔]:TAGS:_message -r \"新标签，使用逗号分隔\"",
+        ),
+        (
+            ":name -- 命令名称:_default",
+            ":name -- 命令名称:_message -r \"命令名称\"",
+        ),
+        (
+            ":cmd -- 要执行的命令内容:_default",
+            ":cmd -- 要执行的命令内容:_message -r \"命令内容\"",
+        ),
+        (
+            "::desc -- 命令描述:_default",
+            "::desc -- 命令描述:_message -r \"命令描述\"",
+        ),
+        (
+            "::name -- 命令名称，留空则进入交互选择:_default",
+            "::name -- 命令名称，留空则进入交互选择:_message -r \"命令名称\"",
+        ),
+        (
+            "::addr -- 代理地址，留空则使用配置中的地址:_default",
+            "::addr -- 代理地址，留空则使用配置中的地址:_message -r \"代理地址\"",
+        ),
+        (
+            ":shell -- 目标 shell：bash、zsh、powershell:_default",
+            ":shell -- 目标 shell：bash、zsh、powershell:(bash zsh powershell)",
+        ),
+        (
+            ":name -- Variable name:_default",
+            ":name -- Variable name:_message -r \"Variable name\"",
+        ),
+        (
+            ":value -- Variable value:_default",
+            ":value -- Variable value:_message -r \"Variable value\"",
+        ),
+        (
+            "-d+[Variable description]:DESC:_default",
+            "-d+[Variable description]:DESC:_message -r \"Variable description\"",
+        ),
+        (
+            "--desc=[Variable description]:DESC:_default",
+            "--desc=[Variable description]:DESC:_message -r \"Variable description\"",
+        ),
+        (
+            "-t+[Comma-separated tags]:TAGS:_default",
+            "-t+[Comma-separated tags]:TAGS:_message -r \"Comma-separated tags\"",
+        ),
+        (
+            "--tags=[Comma-separated tags]:TAGS:_default",
+            "--tags=[Comma-separated tags]:TAGS:_message -r \"Comma-separated tags\"",
+        ),
+        (
+            ":name -- Show only the specified variable:_default",
+            ":name -- Show only the specified variable:_message -r \"Variable name\"",
+        ),
+        (
+            "-t+[Filter by tag]:TAG:_default",
+            "-t+[Filter by tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "--tag=[Filter by tag]:TAG:_default",
+            "--tag=[Filter by tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "(-a --all)-t+[Pause all variables with the tag]:TAG:_default",
+            "(-a --all)-t+[Pause all variables with the tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "(-a --all)--tag=[Pause all variables with the tag]:TAG:_default",
+            "(-a --all)--tag=[Pause all variables with the tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "(-a --all)-t+[Resume all variables with the tag]:TAG:_default",
+            "(-a --all)-t+[Resume all variables with the tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "(-a --all)--tag=[Resume all variables with the tag]:TAG:_default",
+            "(-a --all)--tag=[Resume all variables with the tag]:TAG:_message -r \"Tag\"",
+        ),
+        (
+            "*::names -- One or more variable names:_default",
+            "*::names -- One or more variable names:_message -r \"Variable name\"",
+        ),
+        (
+            "-v+[New value]:VALUE:_default",
+            "-v+[New value]:VALUE:_message -r \"New value\"",
+        ),
+        (
+            "--value=[New value]:VALUE:_default",
+            "--value=[New value]:VALUE:_message -r \"New value\"",
+        ),
+        (
+            "-d+[New description]:DESC:_default",
+            "-d+[New description]:DESC:_message -r \"New description\"",
+        ),
+        (
+            "--desc=[New description]:DESC:_default",
+            "--desc=[New description]:DESC:_message -r \"New description\"",
+        ),
+        (
+            "-t+[New comma-separated tags]:TAGS:_default",
+            "-t+[New comma-separated tags]:TAGS:_message -r \"New comma-separated tags\"",
+        ),
+        (
+            "--tags=[New comma-separated tags]:TAGS:_default",
+            "--tags=[New comma-separated tags]:TAGS:_message -r \"New comma-separated tags\"",
+        ),
+        (
+            ":name -- Command name:_default",
+            ":name -- Command name:_message -r \"Command name\"",
+        ),
+        (
+            ":cmd -- Command body to execute:_default",
+            ":cmd -- Command body to execute:_message -r \"Command body\"",
+        ),
+        (
+            "::desc -- Command description:_default",
+            "::desc -- Command description:_message -r \"Command description\"",
+        ),
+        (
+            "::name -- Command name; omit to use interactive selection:_default",
+            "::name -- Command name; omit to use interactive selection:_message -r \"Command name\"",
+        ),
+        (
+            "::addr -- Proxy address; defaults to configured value:_default",
+            "::addr -- Proxy address; defaults to configured value:_message -r \"Proxy address\"",
+        ),
+        (
+            ":shell -- Target shell: bash, zsh, powershell:_default",
+            ":shell -- Target shell: bash, zsh, powershell:(bash zsh powershell)",
+        ),
+    ];
+
+    let mut out = script.to_string();
+    for (from, to) in replacements {
+        out = out.replace(from, to);
+    }
+    out
 }
 
 pub fn execute(shell: &str, print_only: bool, _config: &Config) -> Result<()> {
@@ -123,6 +347,8 @@ mod tests {
         assert!(script.contains("env"));
         assert!(script.contains("proxy"));
         assert!(script.contains("环境变量管理"));
+        assert!(script.contains(":name -- 变量名:_message -r \"变量名\""));
+        assert!(script.contains(":value -- 变量值:_message -r \"变量值\""));
     }
 
     #[test]
