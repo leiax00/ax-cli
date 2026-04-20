@@ -429,12 +429,18 @@ setopt SHARE_HISTORY
 setopt INC_APPEND_HISTORY
 
 # === 补全 ===
+fpath=("$HOME/.zsh/completions" "$HOME/.local/share/zsh/site-functions" $fpath)
+[ -d "$HOME/.zsh/plugins/zsh-completions/src" ] && fpath=("$HOME/.zsh/plugins/zsh-completions/src" $fpath)
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 setopt AUTO_LIST
 setopt AUTO_MENU
 setopt COMPLETE_IN_WORD
+
+# === zsh plugins ===
+[ -f "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+[ -f "$HOME/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && source "$HOME/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # === Proxy (via ax) ===
 pn() { ax proxy on "$1"; }
@@ -484,6 +490,17 @@ export HISTSIZE=50000
 export HISTIGNORE="ls:ll:cd:pwd:clear:history"
 shopt -s histappend
 PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+
+# === completion ===
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+  source /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+  source /etc/bash_completion
+elif [ -f "$HOME/.local/share/bash-completion/bash_completion" ]; then
+  source "$HOME/.local/share/bash-completion/bash_completion"
+fi
+
+[ -f "$HOME/.local/share/bash-completion/completions/ax" ] && source "$HOME/.local/share/bash-completion/completions/ax"
 
 # === fzf ===
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash

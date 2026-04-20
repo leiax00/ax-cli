@@ -7,7 +7,6 @@ mod shell;
 mod tools;
 
 use anyhow::Result;
-use clap::Parser;
 
 pub fn expand(path: &str) -> std::path::PathBuf {
     if path.starts_with("~/") {
@@ -19,7 +18,7 @@ pub fn expand(path: &str) -> std::path::PathBuf {
 }
 
 fn main() -> Result<()> {
-    let cli = cli::Cli::parse();
+    let cli = cli::parse();
     let config = config::ConfigLoader::load()?;
 
     match cli.command {

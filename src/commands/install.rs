@@ -1,4 +1,5 @@
 use crate::config::{config_dir, expand_home, Config};
+use crate::config::{TEMPLATE_BASHRC, TEMPLATE_ZSHRC};
 use anyhow::Result;
 
 pub fn execute(config: &Config, extras: bool) -> Result<()> {
@@ -45,7 +46,13 @@ pub fn execute(config: &Config, extras: bool) -> Result<()> {
     println!("");
     crate::tools::check_font()?;
 
-    // 6. 部署配置文件（从配置目录链接到系统位置）
+    // 6. 安装 shell 补全
+    println!("");
+    refresh_managed_shell_rcs(&cdir)?;
+    println!("");
+    install_shell_completions(config)?;
+
+    // 7. 部署配置文件（从配置目录链接到系统位置）
     println!("");
     deploy_configs(config, &cdir, &backup_dir)?;
     println!("");
@@ -56,6 +63,39 @@ pub fn execute(config: &Config, extras: bool) -> Result<()> {
     println!("📁 原有配置已备份到: {}", backup_dir.display());
     println!("");
     println!("👉 请重启终端，或运行: exec zsh");
+
+    Ok(())
+}
+
+fn refresh_managed_shell_rcs(cdir: &std::path::Path) -> Result<()> {
+    println!("📝 刷新托管 shell 配置...");
+
+    let managed_files = [
+        ("bash/.zshrc", TEMPLATE_ZSHRC),
+        ("bash/.bashrc", TEMPLATE_BASHRC),
+    ];
+
+    for (rel, content) in managed_files {
+        let path = cdir.join(rel);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, content)?;
+        println!("  ✅ {}", rel);
+    }
+
+    Ok(())
+}
+
+fn install_shell_completions(config: &Config) -> Result<()> {
+    println!("⌨️  安装 shell 补全...");
+
+    for shell in ["zsh", "bash"] {
+        match crate::commands::completion::execute(shell, false, config) {
+            Ok(()) => {}
+            Err(err) => println!("  ⚠️  {shell} 补全安装失败: {err}"),
+        }
+    }
 
     Ok(())
 }
