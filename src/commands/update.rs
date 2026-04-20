@@ -2,7 +2,7 @@ use anyhow::Result;
 use crate::config::{Config, expand_home};
 
 pub fn execute(config: &Config) -> Result<()> {
-    println!("🔄 更新 ax-system-basic...");
+    println!("🔄 更新 ax-cli...");
     println!("");
 
     // 1. git pull 仓库

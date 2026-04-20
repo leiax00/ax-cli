@@ -75,12 +75,12 @@ fn ensure_config_initialized(config: &Config) -> Result<()> {
 }
 
 const AX_ZSH_BLOCK: &str = r#"# >>> ax-cli >>>
-[ -f "$HOME/.config/ax-cli/bash/.zshrc" ] && source "$HOME/.config/ax-cli/bash/.zshrc"
+[ -f "$HOME/.config/axconfig/bash/.zshrc" ] && source "$HOME/.config/axconfig/bash/.zshrc"
 # <<< ax-cli <<<
 "#;
 
 const AX_BASH_BLOCK: &str = r#"# >>> ax-cli >>>
-[ -f "$HOME/.config/ax-cli/bash/.bashrc" ] && source "$HOME/.config/ax-cli/bash/.bashrc"
+[ -f "$HOME/.config/axconfig/bash/.bashrc" ] && source "$HOME/.config/axconfig/bash/.bashrc"
 # <<< ax-cli <<<
 "#;
 

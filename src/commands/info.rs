@@ -50,8 +50,8 @@ pub fn execute(config: &Config) -> Result<()> {
         println!("    {} → {}{}", link.src, link.dst, opt);
     }
     println!("  Shell 引入:");
-    println!("    ~/.zshrc  -> source ~/.config/ax-cli/bash/.zshrc");
-    println!("    ~/.bashrc -> source ~/.config/ax-cli/bash/.bashrc");
+    println!("    ~/.zshrc  -> source ~/.config/axconfig/bash/.zshrc");
+    println!("    ~/.bashrc -> source ~/.config/axconfig/bash/.bashrc");
 
     Ok(())
 }

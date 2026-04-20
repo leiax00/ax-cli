@@ -224,7 +224,7 @@ pub fn export(with_binary: bool, output: Option<&str>, _config: &Config) -> Resu
 
     let filename = output
         .map(|s| s.to_string())
-        .unwrap_or_else(|| format!("ax-config-{}.tar.gz", ts));
+        .unwrap_or_else(|| format!("ax-cli-config-{}.tar.gz", ts));
 
     let output_path = if filename.starts_with('/') || filename.starts_with('~') {
         expand_home(&filename)

@@ -1,4 +1,4 @@
-# ax-system-basic
+# ax-cli
 
 > 个人开发环境配置管理工具。一个二进制 + 一份配置，多机同步，跨平台迁移。
 
@@ -16,7 +16,7 @@
 ```
 ax 二进制（纯工具，不含配置）
   +
-配置仓库（~/.config/ax-cli/，独立 git 仓库）
+配置仓库（~/.config/axconfig/，独立 git 仓库）
   =
 完整的开发环境
 ```
@@ -79,7 +79,7 @@ ax info                          # 查看当前配置
 ## 配置目录结构
 
 ```
-~/.config/ax-cli/              # 配置根目录（XDG 标准）
+~/.config/axconfig/            # 配置根目录（XDG 标准）
 ├── config.yaml                # 主配置
 ├── config.d/                  # 分块配置（自动合并）
 │   ├── commands.yaml          # 用户动态命令
@@ -98,7 +98,7 @@ ax info                          # 查看当前配置
 ```
 AX_CONFIG_DIR 环境变量（最高）
   > 可执行文件同级 config/ 或 config.yaml（便携模式）
-    > ~/.config/ax-cli/（默认）
+    > ~/.config/axconfig/（默认）
 ```
 
 Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
@@ -143,7 +143,7 @@ cargo build --release
 ## 仓库结构
 
 ```
-ax-system-basic/
+ax-cli/
 ├── Cargo.toml                  # Rust 项目配置
 ├── src/                        # Rust 源码
 │   ├── main.rs                 # 入口

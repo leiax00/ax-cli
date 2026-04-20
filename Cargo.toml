@@ -1,8 +1,12 @@
 [package]
-name = "ax"
+name = "ax-cli"
 version = "0.1.0"
 edition = "2021"
 description = "Personal dev environment CLI manager"
+
+[[bin]]
+name = "ax"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

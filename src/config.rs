@@ -210,8 +210,8 @@ pub fn save_env(map: &EnvMap) -> Result<()> {
 // ============ 配置目录 ============
 
 /// 获取 ax-cli 配置根目录
-/// Linux/macOS: ~/.config/ax-cli/
-/// Windows: %APPDATA%/ax-cli/
+/// Linux/macOS: ~/.config/axconfig/
+/// Windows: %APPDATA%/axconfig/
 pub fn config_dir() -> PathBuf {
     if let Ok(env_dir) = std::env::var("AX_CONFIG_DIR") {
         return expand_home(&env_dir);
@@ -220,21 +220,21 @@ pub fn config_dir() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
         if let Some(appdata) = dirs::data_dir() {
-            return appdata.join("ax-cli");
+            return appdata.join("axconfig");
         }
     }
 
     #[cfg(not(target_os = "windows"))]
     {
         if let Some(config) = dirs::config_dir() {
-            return config.join("ax-cli");
+            return config.join("axconfig");
         }
     }
 
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join(".config")
-        .join("ax-cli")
+        .join("axconfig")
 }
 
 /// 获取二进制所在目录
@@ -253,7 +253,7 @@ impl ConfigLoader {
     pub fn load() -> Result<Config> {
         let mut merged: BTreeMap<String, serde_yaml::Value> = BTreeMap::new();
 
-        // 1. 用户级配置（最低优先级）: ~/.config/ax-cli/config.yaml + config.d/*.yaml
+        // 1. 用户级配置（最低优先级）: ~/.config/axconfig/config.yaml + config.d/*.yaml
         let user_dir = config_dir();
         if let Ok(entries) = Self::load_yaml_dir(&user_dir.join("config.d")) {
             Self::merge_into(&mut merged, entries);
@@ -590,7 +590,7 @@ return config
 "#;
 
 pub const TEMPLATE_CONFIG_YAML: &str = r#"# ax-cli 配置文件
-# 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/ax-cli/
+# 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/axconfig/
 
 ax:
   auto_sync: true
@@ -632,7 +632,7 @@ shell:
       url: https://github.com/zsh-users/zsh-completions
 
 packages:
-  dir: ~/.config/ax-cli/packages
+  dir: ~/.config/axconfig/packages
 
 deploy:
   links:
@@ -646,3 +646,34 @@ repo:
   remote: https://anyhub.yushe.ai/leiax00/ax-system-basic.git
   local_dir: ~/.ax-repo
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    fn env_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    #[test]
+    fn uses_ax_config_dir_env_override() {
+        let _guard = env_lock().lock().unwrap();
+        let original = std::env::var("AX_CONFIG_DIR").ok();
+
+        std::env::set_var("AX_CONFIG_DIR", "~/custom-axconfig");
+        assert_eq!(config_dir(), expand_home("~/custom-axconfig"));
+
+        match original {
+            Some(value) => std::env::set_var("AX_CONFIG_DIR", value),
+            None => std::env::remove_var("AX_CONFIG_DIR"),
+        }
+    }
+
+    #[test]
+    fn template_defaults_use_axconfig_directory() {
+        assert!(TEMPLATE_CONFIG_YAML.contains("~/.config/axconfig/"));
+        assert!(TEMPLATE_CONFIG_YAML.contains("~/.config/axconfig/packages"));
+    }
+}
