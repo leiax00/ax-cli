@@ -1,6 +1,6 @@
 use crate::config::{
-    config_dir, expand_home, Config, TEMPLATE_BASHRC, TEMPLATE_CONFIG_YAML, TEMPLATE_WEZTERM,
-    TEMPLATE_ZSHRC,
+    config_dir, expand_home, Config, TEMPLATE_BASHRC, TEMPLATE_CONFIG_YAML, TEMPLATE_TMUX,
+    TEMPLATE_WEZTERM, TEMPLATE_ZSHRC,
 };
 use anyhow::{Context, Result};
 
@@ -17,7 +17,7 @@ pub fn init(force: bool, _config: &Config) -> Result<()> {
     println!("   配置目录: {}", cdir.display());
 
     // 创建目录结构
-    for dir in ["config.d", "bash", "wezterm", "packages", "git"] {
+    for dir in ["config.d", "bash", "wezterm", "tmux", "packages", "git"] {
         std::fs::create_dir_all(cdir.join(dir))?;
     }
     println!("   ✅ 目录结构");
@@ -28,6 +28,7 @@ pub fn init(force: bool, _config: &Config) -> Result<()> {
         ("bash/.bashrc", TEMPLATE_BASHRC),
         ("bash/.zshrc", TEMPLATE_ZSHRC),
         ("wezterm/wezterm.lua", TEMPLATE_WEZTERM),
+        ("tmux/tmux.conf", TEMPLATE_TMUX),
     ];
     for (rel, content) in &files {
         let path = cdir.join(rel);

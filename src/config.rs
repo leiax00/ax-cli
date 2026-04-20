@@ -122,6 +122,11 @@ impl Default for DeployConfig {
                     dst: "~/.gitconfig".into(),
                     optional: true,
                 },
+                LinkEntry {
+                    src: "tmux/tmux.conf".into(),
+                    dst: "~/.config/tmux/tmux.conf".into(),
+                    optional: true,
+                },
             ],
         }
     }
@@ -408,6 +413,7 @@ pub fn expand_home(path: &str) -> PathBuf {
 pub const TEMPLATE_ZSHRC: &str = include_str!("../config/bash/.zshrc");
 pub const TEMPLATE_BASHRC: &str = include_str!("../config/bash/.bashrc");
 pub const TEMPLATE_WEZTERM: &str = include_str!("../config/wezterm/wezterm.lua");
+pub const TEMPLATE_TMUX: &str = include_str!("../config/tmux/tmux.conf");
 
 pub const TEMPLATE_CONFIG_YAML: &str = r#"# ax-cli 配置文件
 # 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/axconfig/
@@ -460,6 +466,9 @@ deploy:
       dst: ~/.config/wezterm/wezterm.lua
     - src: git/.gitconfig
       dst: ~/.gitconfig
+      optional: true
+    - src: tmux/tmux.conf
+      dst: ~/.config/tmux/tmux.conf
       optional: true
 
 repo:
