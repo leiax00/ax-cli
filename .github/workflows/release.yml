@@ -79,43 +79,10 @@ jobs:
       - name: List artifacts
         run: ls -lR artifacts/
 
-      # GitHub Release
       - name: Create GitHub Release
-        if: env.GITHUB_SERVER_URL == 'https://github.com'
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Gitea Release (用 API 手动创建，因为 Gitea 不完全兼容 gh-release action)
-      - name: Create Gitea Release
-        if: env.GITHUB_SERVER_URL != 'https://github.com'
-        env:
-          GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          API_URL="${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/releases"
-
-          # 创建 release
-          curl -s -X POST "${API_URL}" \
-            -H "Authorization: token ${GITEA_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"tag_name\":\"${TAG}\",\"name\":\"${TAG}\",\"draft\":false,\"prerelease\":false}" \
-            | jq -r '.id' > /tmp/release_id.json
-
-          RELEASE_ID=$(cat /tmp/release_id.json)
-          echo "Release ID: ${RELEASE_ID}"
-
-          # 上传所有二进制
-          for file in artifacts/*/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              echo "Uploading: ${filename}"
-              curl -s -X POST "${API_URL}/${RELEASE_ID}/assets?name=${filename}" \
-                -H "Authorization: token ${GITEA_TOKEN}" \
-                -H "Content-Type: application/octet-stream" \
-                --data-binary "@${file}"
-            fi
-          done

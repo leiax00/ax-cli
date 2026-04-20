@@ -62,7 +62,7 @@ src/
 
 - `config/`：配置模板（bash/.zshrc、wezterm/wezterm.lua、packages/、git/），供参考和 `ax config init` 使用
 - `install/`：安装脚本（install-ax.sh、install-ax.ps1、npm/）
-- `.github/workflows/`、`.gitea/workflows/`：CI/CD（build + release，5 平台交叉编译）
+- `.github/workflows/`：CI/CD（build + release，5 平台交叉编译）
 
 ## 开发约定
 

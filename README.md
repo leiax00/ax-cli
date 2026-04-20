@@ -218,7 +218,6 @@ ax-cli/
 │   ├── install-ax.ps1
 │   └── npm/
 ├── .github/workflows/          # CI/CD
-├── .gitea/workflows/
 └── docs/                       # 文档
 ```
 
