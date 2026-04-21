@@ -18,7 +18,7 @@ local config = {
   text_background_opacity = 0.92,
   -- NONE可以隐藏header
   window_decorations = "NONE",
-  hide_tab_bar_if_only_one_tab = false,
+  hide_tab_bar_if_only_one_tab = true,
   enable_tab_bar = true,
   tab_bar_at_bottom = true,
   use_fancy_tab_bar = true,
@@ -47,6 +47,14 @@ config.keys = {
 
   -- 标签页
   { key = 't', mods = 'CTRL', action = act.ShowTabNavigator },
+  { key = ',', mods = 'LEADER', action = act.PromptInputLine {
+    description = '重命名标签',
+    action = wezterm.action_callback(function(window, pane, line)
+      if line then
+        window:active_tab():set_title(line)
+      end
+    end),
+  }},
   { key = 'c', mods = 'LEADER', action = act.SpawnTab 'CurrentPaneDomain' },
   { key = 'n', mods = 'LEADER', action = act.ActivateTabRelative(1) },
   { key = 'p', mods = 'LEADER', action = act.ActivateTabRelative(-1) },
