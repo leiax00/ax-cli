@@ -23,7 +23,13 @@
 
 - bash: `~/.local/share/bash-completion/completions/ax`
 - zsh: `~/.zsh/completions/_ax` 或 `~/.local/share/zsh/site-functions/_ax`
-- PowerShell: `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1`
+- Windows PowerShell 5.1: `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1`
+- PowerShell 7 (`pwsh`): `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1`
+
+PowerShell 安装策略：
+
+- `ax completion powershell` 默认同时写入 Windows PowerShell 5.1 和 PowerShell 7 的 profile
+- `ax completion pwsh` 仅写入 PowerShell 7 的 profile
 
 ## shell 接入
 
@@ -44,6 +50,12 @@ zsh 侧的接入方式要求：
 - 将 `~/.zsh/completions` 和 `${XDG_DATA_HOME:-~/.local/share}/zsh/site-functions` 加入 `fpath`
 - 再执行 `compinit`
 - 不再直接 `source` 旧的 bash 风格补全文件路径
+
+bash 侧的接入方式要求：
+
+- 先加载 `bash_completion` 框架
+- 再 `source` `${XDG_DATA_HOME:-~/.local/share}/bash-completion/completions/ax`
+- 不再直接引用旧的 `~/.ax/bash/completions/ax`
 
 `ax install` 在 `src/commands/install.rs` 中会执行：
 

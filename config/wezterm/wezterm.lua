@@ -108,7 +108,7 @@ config.mouse_bindings = {
 }
 
 -- === 默认启动程序 ===
-config.default_prog = { '/usr/bin/env', 'bash', '-l' }
+config.default_prog = { '/usr/bin/env', 'zsh', '-l' }
 
 -- === 状态栏 ===
 wezterm.on('update-status', function(window, pane)

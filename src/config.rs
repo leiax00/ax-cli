@@ -489,4 +489,10 @@ mod tests {
         assert!(TEMPLATE_ZSHRC.contains("site-functions"));
         assert!(!TEMPLATE_ZSHRC.contains("~/.ax/bash/completions/ax"));
     }
+
+    #[test]
+    fn bash_template_loads_generated_completion_file() {
+        assert!(TEMPLATE_BASHRC.contains("bash-completion/completions/ax"));
+        assert!(!TEMPLATE_BASHRC.contains("~/.ax/bash/completions/ax"));
+    }
 }

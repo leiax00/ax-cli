@@ -6,7 +6,7 @@
 
 **一条 `ax` 命令，走到哪都能用。**
 
-- **屏蔽终端差异**：bash、zsh、PowerShell 5/7、cmd，用户只用 `ax`，不关心自己开的哪个终端
+- **屏蔽终端差异**：bash、zsh、Windows PowerShell 5.1、PowerShell 7、cmd，用户只用 `ax`，不关心自己开的哪个终端
 - **工具与配置分离**：ax 二进制纯工具，配置目录独立 git 仓库，可同步、迁移、分享
 - **便携模式**：二进制旁放 `config/` 目录即可，适合 U盘、Windows 等场景
 - **零运行时依赖**：Rust 单二进制，curl 下载即用，~4.6MB
@@ -167,25 +167,53 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 自动检测系统，无需手动选择。
 包作用说明见 `docs/packages.md`。
 
-## 实现状态
+## Feature 支持矩阵
 
-| 模块 | 状态 | 说明 |
-|------|------|------|
-| ax CLI (Rust) | ✅ | 单二进制零依赖，5 平台编译 |
-| 配置管理 | ✅ | YAML，级联合并，独立 git 仓库 |
-| 命令管理 | ✅ | CRUD + 自动同步 + shell 补全 |
-| 环境变量管理 | ✅ | 标签分组，暂停/恢复，eval 加载 |
-| 代理管理 | ✅ | eval $(ax proxy on) |
-| Shell 补全 | ✅ | 基于 clap 自动生成，支持多层子命令与 zsh 说明 |
-| Help 多语言 | ✅ | 根据 AX_LANG / LANG 自动切换中文或英文 |
-| 配置导入导出 | ✅ | 跨机器迁移，含二进制的便携包 |
-| WezTerm 配置 | ✅ | Catppuccin Mocha，tmux 风格快捷键 |
-| zsh 配置 | ✅ | 自动建议、语法高亮、增强补全、灰显历史预测 |
-| Starship Prompt | ✅ | 通过 ax install 安装 |
-| fzf 模糊搜索 | ✅ | 通过 ax install 安装 |
-| CI/CD | ✅ | GitHub Actions + Gitea Actions |
-| Git 配置 | 🔲 | 需要填充 .gitconfig |
-| tmux 配置 | 🔲 | 预留 |
+说明：
+
+- `✅`：当前已支持
+- `⚠️`：部分支持，通常需要手动接入或体验有差异
+- `❌`：当前未提供
+
+### 核心 CLI 能力
+
+这些能力和交互 shell 基本无关，进入任意终端后直接执行 `ax ...` 即可：
+
+| 能力点 | zsh | bash | Windows PowerShell 5.1 | PowerShell 7 | cmd | 说明 |
+|------|------|------|------|------|------|------|
+| CLI 基础命令解析与执行 | ✅ | ✅ | ✅ | ✅ | ✅ | Rust 单二进制 |
+| 配置初始化与路径管理 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax config init/path/remote` |
+| 配置同步 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax config push/pull` |
+| 配置导入导出 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax config export/import` |
+| 自定义命令 CRUD | ✅ | ✅ | ✅ | ✅ | ✅ | `ax add/edit/rm/list` |
+| 自定义命令执行 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax run [name]` |
+| 环境变量管理 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax env add/edit/show/pause/resume/tags` |
+| 代理状态查看 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax proxy status` |
+| Help 多语言 | ✅ | ✅ | ✅ | ✅ | ✅ | `AX_LANG` / `LANG` 驱动 |
+| WezTerm 配置模板 | ✅ | ✅ | ✅ | ✅ | ✅ | 配置文件可管理，是否使用取决于用户终端 |
+| Starship 安装 | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | 工具可安装，但 shell 初始化脚本目前只托管 bash/zsh |
+| fzf 安装 | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | 当前仓库主要提供 bash/zsh 集成 |
+| CI/CD 构建发布 | ✅ | ✅ | ✅ | ✅ | ✅ | 与交互 shell 无关 |
+| Git 配置模板 | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | 模板已预留，内容需用户补充 |
+| tmux 配置模板 | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | 模板已预留 |
+
+### Shell / 终端集成能力
+
+这些能力依赖各 shell 的补全系统、启动脚本或插件机制，不同终端体验不同：
+
+| 能力点 | zsh | bash | Windows PowerShell 5.1 | PowerShell 7 | cmd | 说明 |
+|------|------|------|------|------|------|------|
+| 托管 shell 配置自动接入 | ✅ | ✅ | ❌ | ❌ | ❌ | 当前只维护 `bash/.zshrc` 和 `bash/.bashrc` |
+| `ax completion <shell>` 生成补全脚本 | ✅ | ✅ | ✅ | ✅ | ❌ | `powershell` 默认覆盖 5.1 和 7；`pwsh` 仅覆盖 7 |
+| `ax install` 自动安装补全 | ✅ | ✅ | ❌ | ❌ | ❌ | 当前安装流程只自动装 zsh/bash 补全 |
+| 多层子命令补全 | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | PowerShell 可生成补全，但未自动接入 |
+| 补全候选描述显示 | ✅ | ❌ | ❌ | ❌ | ❌ | 目前只有 zsh 展示命令说明 |
+| 历史灰显预测 | ✅ | ❌ | ❌ | ❌ | ❌ | 依赖 `zsh-autosuggestions` |
+| 语法高亮 | ✅ | ❌ | ❌ | ❌ | ❌ | 依赖 `zsh-syntax-highlighting` |
+| `ax proxy on/off` 直接修改当前 shell 环境 | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | zsh/bash 通过托管函数直接 `eval`；PowerShell/cmd 需手动执行提示命令 |
+| `ax env load` 输出当前 shell 可执行脚本 | ✅ | ✅ | ✅ | ✅ | ✅ | 自动按 shell 输出 `export` / `$env:` / `set` |
+| 自定义命令快捷函数 | ✅ | ✅ | ❌ | ❌ | ❌ | `commands.sh` 只为 bash/zsh 生成并 source |
+| 重新加载托管配置即可生效 | ✅ | ✅ | ❌ | ❌ | ❌ | `source ~/.config/axconfig/bash/.zshrc/.bashrc` |
 
 ## 编译
 

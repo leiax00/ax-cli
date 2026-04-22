@@ -25,7 +25,9 @@ elif [ -f "$HOME/.local/share/bash-completion/bash_completion" ]; then
   source "$HOME/.local/share/bash-completion/bash_completion"
 fi
 
-[ -f ~/.ax/bash/completions/ax ] && source ~/.ax/bash/completions/ax
+if [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions/ax" ]; then
+  source "${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions/ax"
+fi
 
 # === fzf ===
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash

@@ -99,8 +99,8 @@ proxy:
 | 模板常量 | 生成文件 | 内容 | 来源 |
 |---------|---------|------|------|
 | `TEMPLATE_CONFIG_YAML` | `config.yaml` | 主配置示例 | 代码内嵌 |
-| `TEMPLATE_ZSHRC` | 部署为 `~/.zshrc` | zsh 配置（历史、补全、fzf、别名、代理） | `config/bash/.zshrc` |
-| `TEMPLATE_BASHRC` | 部署为 `~/.bashrc` | bash 配置（类似 zshrc） | `config/bash/.bashrc` |
+| `TEMPLATE_ZSHRC` | `~/.config/axconfig/bash/.zshrc` | zsh 托管配置片段（由 `~/.zshrc` 引入） | `config/bash/.zshrc` |
+| `TEMPLATE_BASHRC` | `~/.config/axconfig/bash/.bashrc` | bash 托管配置片段（由 `~/.bashrc` 引入） | `config/bash/.bashrc` |
 | `TEMPLATE_WEZTERM` | 部署为 `~/.config/wezterm/wezterm.lua` | WezTerm 终端配置 | `config/wezterm/wezterm.lua` |
 | `TEMPLATE_TMUX` | 部署为 `~/.config/tmux/tmux.conf` | tmux 终端复用配置 | `config/tmux/tmux.conf` |
 

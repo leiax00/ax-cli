@@ -33,6 +33,6 @@ pub fn execute(config: &Config) -> Result<()> {
     crate::tools::check_font()?;
 
     println!("");
-    println!("✅ 更新完成！运行 exec zsh 或重启终端使配置生效。");
+    println!("✅ 更新完成！重启终端，或重新加载对应的 shell 入口文件使配置生效。");
     Ok(())
 }

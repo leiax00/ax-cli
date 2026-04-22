@@ -66,7 +66,7 @@ pub fn execute(config: &Config, extras: bool) -> Result<()> {
     println!("✅ 部署完成！");
     println!("📁 原有配置已备份到: {}", backup_dir.display());
     println!("");
-    println!("👉 请重启终端，或运行: exec zsh");
+    println!("👉 请重启终端，或重新加载对应的 shell 入口文件（如 ~/.zshrc / ~/.bashrc）");
 
     Ok(())
 }

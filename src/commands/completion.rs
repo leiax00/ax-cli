@@ -39,12 +39,40 @@ fn completion_dir(shell: &str) -> Result<std::path::PathBuf> {
                 .join(".zsh")
                 .join("completions"))
         }
-        "powershell" | "pwsh" | "p" => Ok(dirs::document_dir()
-            .unwrap_or_default()
-            .join("PowerShell")
-            .join("Microsoft.PowerShell_profile.ps1")),
-        _ => anyhow::bail!("不支持的 shell: {shell}\n支持: bash, zsh, powershell"),
+        _ => anyhow::bail!("不支持的 shell: {shell}\n支持: bash, zsh"),
     }
+}
+
+fn powershell_profile_targets(shell: &str) -> Vec<std::path::PathBuf> {
+    let Some(documents_dir) = dirs::document_dir() else {
+        return Vec::new();
+    };
+    powershell_profile_targets_in(&documents_dir, shell)
+}
+
+fn powershell_profile_targets_in(
+    documents_dir: &std::path::Path,
+    shell: &str,
+) -> Vec<std::path::PathBuf> {
+    let mut targets = Vec::new();
+
+    if matches!(shell, "powershell" | "p") {
+        targets.push(
+            documents_dir
+                .join("WindowsPowerShell")
+                .join("Microsoft.PowerShell_profile.ps1"),
+        );
+    }
+
+    if matches!(shell, "powershell" | "pwsh" | "p") {
+        targets.push(
+            documents_dir
+                .join("PowerShell")
+                .join("Microsoft.PowerShell_profile.ps1"),
+        );
+    }
+
+    targets
 }
 
 fn build_script(shell: &str) -> Result<String> {
@@ -55,7 +83,7 @@ fn build_script(shell: &str) -> Result<String> {
         "bash" | "b" => generate(Bash, &mut cmd, "ax", &mut buf),
         "zsh" | "z" => generate(Zsh, &mut cmd, "ax", &mut buf),
         "powershell" | "pwsh" | "p" => generate(PowerShell, &mut cmd, "ax", &mut buf),
-        _ => anyhow::bail!("不支持的 shell: {shell}\n支持: bash, zsh, powershell"),
+        _ => anyhow::bail!("不支持的 shell: {shell}\n支持: bash, zsh, powershell, pwsh"),
     }
 
     let script = String::from_utf8(buf)?;
@@ -300,28 +328,40 @@ pub fn execute(shell: &str, print_only: bool, _config: &Config) -> Result<()> {
         _ => shell,
     };
 
-    let target = completion_dir(shell)?;
-
     if matches!(shell, "powershell" | "pwsh" | "p") {
-        let target_dir = target.parent().unwrap().to_path_buf();
-        if target.exists() {
-            let content = std::fs::read_to_string(&target)?;
-            if content.contains("# powershell completion for ax") {
-                println!("✅ {shell_name} 补全已安装: {}", target.display());
-                return Ok(());
-            }
+        let targets = powershell_profile_targets(shell);
+        if targets.is_empty() {
+            anyhow::bail!("无法确定 PowerShell profile 路径");
         }
-        std::fs::create_dir_all(target_dir)?;
-        let mut f = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&target)?;
-        f.write_all(b"\n\n# ax completion\n")?;
-        f.write_all(script.as_bytes())?;
-        println!("✅ {shell_name} 补全已安装到: {}", target.display());
+
+        let mut installed = Vec::new();
+        for target in targets {
+            let target_dir = target.parent().unwrap().to_path_buf();
+            if target.exists() {
+                let content = std::fs::read_to_string(&target)?;
+                if content.contains("# powershell completion for ax") {
+                    installed.push(target);
+                    continue;
+                }
+            }
+            std::fs::create_dir_all(target_dir)?;
+            let mut f = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&target)?;
+            f.write_all(b"\n\n# ax completion\n")?;
+            f.write_all(script.as_bytes())?;
+            installed.push(target);
+        }
+
+        println!("✅ {shell_name} 补全已安装到:");
+        for target in installed {
+            println!("   {}", target.display());
+        }
         return Ok(());
     }
 
+    let target = completion_dir(shell)?;
     let filename = match shell {
         "bash" | "b" => "ax",
         _ => "_ax",
@@ -366,5 +406,24 @@ mod tests {
 
         assert!(bash_dir.ends_with("completions"));
         assert!(zsh_dir.ends_with("completions") || zsh_dir.ends_with("site-functions"));
+    }
+
+    #[test]
+    fn powershell_installs_to_both_profiles_by_default() {
+        let doc = std::path::PathBuf::from("/tmp/Documents");
+        let targets = powershell_profile_targets_in(&doc, "powershell");
+
+        assert_eq!(targets.len(), 2);
+        assert!(targets[0].ends_with("WindowsPowerShell/Microsoft.PowerShell_profile.ps1"));
+        assert!(targets[1].ends_with("PowerShell/Microsoft.PowerShell_profile.ps1"));
+    }
+
+    #[test]
+    fn pwsh_installs_only_to_powershell_7_profile() {
+        let doc = std::path::PathBuf::from("/tmp/Documents");
+        let targets = powershell_profile_targets_in(&doc, "pwsh");
+
+        assert_eq!(targets.len(), 1);
+        assert!(targets[0].ends_with("PowerShell/Microsoft.PowerShell_profile.ps1"));
     }
 }

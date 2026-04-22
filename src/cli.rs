@@ -350,7 +350,7 @@ fn localize_zh(cmd: Command) -> Command {
         })
         .mut_subcommand("completion", |c| {
             c.about("生成并安装 shell 补全")
-                .mut_arg("shell", |arg| arg.help("目标 shell：bash、zsh、powershell"))
+                .mut_arg("shell", |arg| arg.help("目标 shell：bash、zsh、powershell（5.1+7）、pwsh（仅 7）"))
                 .mut_arg("print", |arg| arg.help("打印补全脚本而不是安装"))
         })
         .mut_subcommand("info", |c| c.about("显示当前配置和路径"))
@@ -470,7 +470,7 @@ fn localize_en(cmd: Command) -> Command {
         .mut_subcommand("completion", |c| {
             c.about("Generate and install shell completion")
                 .mut_arg("shell", |arg| {
-                    arg.help("Target shell: bash, zsh, powershell")
+                    arg.help("Target shell: bash, zsh, powershell (5.1+7), pwsh (7 only)")
                 })
                 .mut_arg("print", |arg| {
                     arg.help("Print the completion script instead of installing it")
