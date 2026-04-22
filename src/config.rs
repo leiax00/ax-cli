@@ -189,6 +189,42 @@ pub fn save_commands(map: &CommandMap) -> Result<()> {
     Ok(())
 }
 
+/// 根据 commands.yaml 生成 shell 函数文件（供 source 加载）
+/// 每个命令生成同名函数，内联命令内容，使 cd 等内置命令在当前 shell 生效
+pub fn generate_command_functions(config: &Config) -> Result<()> {
+    let map = load_all_commands(config)?;
+    let cdir = config_dir();
+    std::fs::create_dir_all(cdir.join("config.d"))?;
+    let path = cdir.join("config.d").join("commands.sh");
+
+    if map.is_empty() {
+        // 无命令时写入空文件，避免 source 报错
+        std::fs::write(&path, "")?;
+        return Ok(());
+    }
+
+    let mut lines = String::from("# ax-cli 自定义命令（自动生成，请勿手动编辑）\n\n");
+    let mut entries: Vec<_> = map.iter().collect();
+    entries.sort_by_key(|(k, _)| *k);
+
+    for (name, entry) in &entries {
+        // 命令名只允许安全字符，防止注入
+        if !name.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+            eprintln!("⚠️  跳过无效命令名: {name}（仅允许字母、数字、- 和 _）");
+            continue;
+        }
+        // 用 eval + 单引号包裹命令内容，避免 source 时执行替换
+        let escaped = entry.cmd.replace('\'', "'\\''");
+        lines.push_str(name);
+        lines.push_str("() {\n  eval '");
+        lines.push_str(&escaped);
+        lines.push_str("'\n}\n\n");
+    }
+
+    std::fs::write(&path, lines)?;
+    Ok(())
+}
+
 /// 加载环境变量（合并主配置 + config.d/env.yaml）
 pub fn load_all_env(config: &Config) -> Result<EnvMap> {
     let mut map = config.env.clone();
@@ -415,66 +451,7 @@ pub const TEMPLATE_BASHRC: &str = include_str!("../config/bash/.bashrc");
 pub const TEMPLATE_WEZTERM: &str = include_str!("../config/wezterm/wezterm.lua");
 pub const TEMPLATE_TMUX: &str = include_str!("../config/tmux/tmux.conf");
 
-pub const TEMPLATE_CONFIG_YAML: &str = r#"# ax-cli 配置文件
-# 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/axconfig/
-
-ax:
-  auto_sync: true
-  commands:
-    esp:
-      cmd: "cd ~/esp/esp-idf && . export.sh"
-      desc: "进入 ESP-IDF 开发环境"
-    dcup:
-      cmd: "docker compose up -d"
-      desc: "启动 Docker 容器"
-    dcdown:
-      cmd: "docker compose down"
-      desc: "停止 Docker 容器"
-    dps:
-      cmd: "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
-      desc: "查看运行中的容器"
-    lg:
-      cmd: "lazygit"
-      desc: "打开 lazygit"
-    clean:
-      cmd: "docker system prune -af"
-      desc: "清理 Docker"
-    ps:
-      cmd: "ax proxy status"
-      desc: "查看代理状态"
-
-proxy:
-  address: "http://vpn.yushe.ai:7890"
-  no_proxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local"
-
-shell:
-  default: zsh
-  plugins:
-    - name: zsh-autosuggestions
-      url: https://github.com/zsh-users/zsh-autosuggestions
-    - name: zsh-syntax-highlighting
-      url: https://github.com/zsh-users/zsh-syntax-highlighting
-    - name: zsh-completions
-      url: https://github.com/zsh-users/zsh-completions
-
-packages:
-  dir: ~/.config/axconfig/packages
-
-deploy:
-  links:
-    - src: wezterm/wezterm.lua
-      dst: ~/.config/wezterm/wezterm.lua
-    - src: git/.gitconfig
-      dst: ~/.gitconfig
-      optional: true
-    - src: tmux/tmux.conf
-      dst: ~/.config/tmux/tmux.conf
-      optional: true
-
-repo:
-  remote: https://anyhub.yushe.ai/leiax00/ax-system-basic.git
-  local_dir: ~/.ax-repo
-"#;
+pub const TEMPLATE_CONFIG_YAML: &str = include_str!("../config/config.yaml");
 
 #[cfg(test)]
 mod tests {

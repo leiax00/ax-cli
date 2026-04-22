@@ -29,6 +29,7 @@ Cli (顶层)
 │   ├── Rm { name }
 │   ├── List
 │   ├── Run { name? }
+│   ├── Link
 │   ├── Env(EnvAction)
 │   │   ├── Add { name, value, tag? }
 │   │   ├── Edit { name }
@@ -82,3 +83,41 @@ Cli (顶层)
 - 错误处理统一使用 `anyhow::Result`
 - 路径展开使用 `expand()` 处理 `~` 前缀
 - 修改配置后通过 `save_commands()` / `save_env()` 持久化
+
+## Shell 函数自动生成
+
+自定义命令支持直接在 shell 中以函数形式调用（如直接输入 `portal` 而非 `ax run portal`）。
+
+### 实现机制
+
+`config.rs` 中的 `generate_command_functions()` 读取所有自定义命令，生成 shell 函数文件到 `config.d/commands.sh`。每个命令生成同名函数，内联命令内容：
+
+```bash
+code_self() {
+  cd /workspace/code/self
+}
+
+portal() {
+  set -a; source deploy/portal/.env; set +a
+  cd server/biz-sevice/portal-start
+  mvn spring-boot:run -Dspring-boot.run.profiles=dev
+}
+```
+
+这种方式确保 `cd` 等内置命令在当前 shell 上下文执行。
+
+### 自动更新
+
+`ax add`、`ax edit`、`ax rm` 执行后会自动调用 `generate_command_functions()` 更新函数文件。
+
+### 手动刷新
+
+- `ax link` — 重新生成 `commands.sh`，输出 source 命令提示
+- `source ~/.config/axconfig/config.d/commands.sh` — 在当前 shell 中重新加载
+
+### 加载方式
+
+shell 模板（`.zshrc`/`.bashrc`）末尾包含：
+```bash
+[ -f "$HOME/.config/axconfig/config.d/commands.sh" ] && source "$HOME/.config/axconfig/config.d/commands.sh"
+```

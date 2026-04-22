@@ -79,8 +79,14 @@ fn main() -> Result<()> {
             cli::EnvAction::Load => commands::env::load(&config)?,
             cli::EnvAction::Tags => commands::env::tags(&config)?,
         },
-        Some(cli::Commands::Add { name, cmd, desc }) => {
-            commands::add::execute(&name, &cmd, &desc, &config)?;
+        Some(cli::Commands::Add {
+            name,
+            cmd,
+            desc,
+            file,
+            raw,
+        }) => {
+            commands::add::execute(&name, cmd.as_deref(), desc.as_deref(), file.as_deref(), raw, &config)?;
         }
         Some(cli::Commands::Edit { name }) => {
             commands::edit::execute(&name, &config)?;
@@ -97,6 +103,9 @@ fn main() -> Result<()> {
         }
         Some(cli::Commands::Run { name }) => {
             commands::run::execute(name.as_deref(), &config)?;
+        }
+        Some(cli::Commands::Link) => {
+            commands::link::execute(&config)?;
         }
         Some(cli::Commands::Push) => {
             commands::push::execute(&config)?;

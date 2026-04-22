@@ -1,5 +1,6 @@
 pub mod add;
 pub mod completion;
+pub mod link;
 pub mod config;
 pub mod edit;
 pub mod env;

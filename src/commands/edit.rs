@@ -1,11 +1,12 @@
-use crate::config::{load_all_commands, save_commands, CommandEntry, Config};
+use crate::config::{generate_command_functions, load_all_commands, save_commands, CommandEntry, Config};
 use anyhow::Result;
 use std::io::{self, Write};
 
 pub fn execute(name: &str, config: &Config) -> Result<()> {
     let mut map = load_all_commands(config)?;
+    let name = resolve_name(name, &map);
 
-    if let Some(entry) = map.get(name) {
+    if let Some(entry) = map.get(&name) {
         println!("当前命令: {}", entry.cmd);
         println!("当前描述: {}", entry.desc);
 
@@ -32,18 +33,31 @@ pub fn execute(name: &str, config: &Config) -> Result<()> {
         };
 
         map.insert(
-            name.into(),
+            name.clone().into(),
             CommandEntry {
                 cmd: new_cmd.into(),
                 desc: new_desc.into(),
             },
         );
         save_commands(&map)?;
+        generate_command_functions(config)?;
         println!("✅ 已更新: {name}");
-        crate::commands::config::push(config)?;
     } else {
         println!("❌ 未找到: {name}");
     }
 
     Ok(())
+}
+
+fn resolve_name(name: &str, map: &crate::config::CommandMap) -> String {
+    if map.contains_key(name) {
+        name.to_string()
+    } else {
+        let prefixed = format!("ax-{name}");
+        if map.contains_key(&prefixed) {
+            prefixed
+        } else {
+            name.to_string()
+        }
+    }
 }

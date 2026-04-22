@@ -62,10 +62,8 @@ alias ...='cd ../..'
 alias grep='grep --color=auto'
 alias cls='clear'
 
-# === Proxy (via ax) ===
-pn() { ax proxy on "$1"; }
-pf() { ax proxy off; }
-ps() { ax proxy status }
+# === 自定义命令（ax add/edit/rm 自动更新）===
+[ -f "$HOME/.config/axconfig/config.d/commands.sh" ] && source "$HOME/.config/axconfig/config.d/commands.sh"
 
 # === 键盘绑定 ===
 bindkey -e

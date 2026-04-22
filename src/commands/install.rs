@@ -1,4 +1,4 @@
-use crate::config::{config_dir, expand_home, Config};
+use crate::config::{config_dir, expand_home, generate_command_functions, Config};
 use crate::config::{TEMPLATE_BASHRC, TEMPLATE_ZSHRC};
 use anyhow::Result;
 
@@ -57,6 +57,10 @@ pub fn execute(config: &Config, extras: bool) -> Result<()> {
     deploy_configs(config, &cdir, &backup_dir)?;
     println!("");
     install_shell_includes(&cdir, &backup_dir)?;
+
+    // 8. 生成自定义命令的 shell 函数
+    println!("");
+    generate_command_functions(config)?;
 
     println!("");
     println!("✅ 部署完成！");

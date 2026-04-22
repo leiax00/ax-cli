@@ -28,9 +28,16 @@ pub enum Commands {
     /// 添加自定义命令
     Add {
         name: String,
-        cmd: String,
-        #[arg(default_value = "")]
-        desc: String,
+        /// 命令内容，传 - 从 stdin 读取，省略则打开编辑器
+        cmd: Option<String>,
+        #[arg(short, long)]
+        desc: Option<String>,
+        /// 从文件读取命令内容
+        #[arg(short, long)]
+        file: Option<String>,
+        /// 不自动添加 ax- 前缀
+        #[arg(long)]
+        raw: bool,
     },
     /// 编辑已有命令
     Edit { name: String },
@@ -45,6 +52,8 @@ pub enum Commands {
     Rm { name: String },
     /// 执行命令（未指定名称时进入交互选择）
     Run { name: Option<String> },
+    /// 刷新自定义命令的 shell 函数（或使用 source 重新加载）
+    Link,
     /// 推送配置到远程仓库
     #[command(alias = "sync")]
     Push,
@@ -305,8 +314,10 @@ fn localize_zh(cmd: Command) -> Command {
         .mut_subcommand("add", |c| {
             c.about("添加自定义命令")
                 .mut_arg("name", |arg| arg.help("命令名称"))
-                .mut_arg("cmd", |arg| arg.help("要执行的命令内容"))
+                .mut_arg("cmd", |arg| arg.help("命令内容，传 - 从 stdin 读取，省略则打开编辑器"))
                 .mut_arg("desc", |arg| arg.help("命令描述"))
+                .mut_arg("file", |arg| arg.help("从文件读取命令内容"))
+                .mut_arg("raw", |arg| arg.help("不自动添加 ax- 前缀"))
         })
         .mut_subcommand("edit", |c| {
             c.about("编辑已有命令")
@@ -321,6 +332,7 @@ fn localize_zh(cmd: Command) -> Command {
             c.about("执行命令")
                 .mut_arg("name", |arg| arg.help("命令名称，留空则进入交互选择"))
         })
+        .mut_subcommand("link", |c| c.about("刷新自定义命令的 shell 函数"))
         .mut_subcommand("push", |c| c.about("推送配置到远程仓库"))
         .mut_subcommand("pull", |c| c.about("从远程仓库拉取配置"))
         .mut_subcommand("install", |c| {
@@ -434,6 +446,7 @@ fn localize_en(cmd: Command) -> Command {
                 arg.help("Command name; omit to use interactive selection")
             })
         })
+        .mut_subcommand("link", |c| c.about("Refresh shell functions for custom commands"))
         .mut_subcommand("push", |c| c.about("Push config to the remote repository"))
         .mut_subcommand("pull", |c| {
             c.about("Pull config from the remote repository")

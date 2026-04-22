@@ -1,0 +1,44 @@
+# ax-cli 配置文件
+# 优先级: AX_CONFIG_DIR > 可执行文件同级 config/ > ~/.config/axconfig/
+
+ax:
+  auto_sync: true
+  commands:
+    ax-esp:
+      cmd: "cd ~/.espressif/v6.0/esp-idf && . ./export.sh"
+      desc: "进入 ESP-IDF 开发环境"
+    ax-dc-clean:
+      cmd: "docker system prune -af"
+      desc: "清理 Docker"
+
+proxy:
+  address: "http://vpn.yushe.ai:7890"
+  no_proxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local"
+
+shell:
+  default: zsh
+  plugins:
+    - name: zsh-autosuggestions
+      url: https://github.com/zsh-users/zsh-autosuggestions
+    - name: zsh-syntax-highlighting
+      url: https://github.com/zsh-users/zsh-syntax-highlighting
+    - name: zsh-completions
+      url: https://github.com/zsh-users/zsh-completions
+
+packages:
+  dir: ~/.config/axconfig/packages
+
+deploy:
+  links:
+    - src: wezterm/wezterm.lua
+      dst: ~/.config/wezterm/wezterm.lua
+    - src: git/.gitconfig
+      dst: ~/.gitconfig
+      optional: true
+    - src: tmux/tmux.conf
+      dst: ~/.config/tmux/tmux.conf
+      optional: true
+
+repo:
+  remote: https://anyhub.yushe.ai/leiax00/ax-cli.git
+  local_dir: ~/.ax-repo
