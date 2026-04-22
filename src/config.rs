@@ -482,4 +482,11 @@ mod tests {
         assert!(TEMPLATE_CONFIG_YAML.contains("~/.config/axconfig/"));
         assert!(TEMPLATE_CONFIG_YAML.contains("~/.config/axconfig/packages"));
     }
+
+    #[test]
+    fn zsh_template_loads_generated_completion_dirs() {
+        assert!(TEMPLATE_ZSHRC.contains("~/.zsh/completions"));
+        assert!(TEMPLATE_ZSHRC.contains("site-functions"));
+        assert!(!TEMPLATE_ZSHRC.contains("~/.ax/bash/completions/ax"));
+    }
 }

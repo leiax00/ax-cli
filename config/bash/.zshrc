@@ -34,16 +34,23 @@ if [ -d ~/.zsh/plugins/zsh-completions ]; then
   fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
 fi
 
+# ax generated completions
+if [ -d ~/.zsh/completions ]; then
+  fpath=(~/.zsh/completions $fpath)
+fi
+
+if [ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" ]; then
+  fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" $fpath)
+fi
+
 # === 补全 ===
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 setopt AUTO_LIST
 setopt AUTO_MENU
 setopt COMPLETE_IN_WORD
-
-# === ax 补全 ===
-[ -f ~/.ax/bash/completions/ax ] && source ~/.ax/bash/completions/ax
 
 # === fzf ===
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

@@ -39,6 +39,12 @@
 - zsh `fpath` 配置
 - `zsh-autosuggestions` / `zsh-syntax-highlighting` / `zsh-completions` 插件加载
 
+zsh 侧的接入方式要求：
+
+- 将 `~/.zsh/completions` 和 `${XDG_DATA_HOME:-~/.local/share}/zsh/site-functions` 加入 `fpath`
+- 再执行 `compinit`
+- 不再直接 `source` 旧的 bash 风格补全文件路径
+
 `ax install` 在 `src/commands/install.rs` 中会执行：
 
 1. 刷新托管的 `bash/.zshrc` 和 `bash/.bashrc`
