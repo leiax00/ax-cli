@@ -16,14 +16,6 @@ pub fn execute(config: &Config) -> Result<()> {
     );
     println!("  包列表目录:    {}", cdir.join("packages").display());
     println!("");
-    println!(
-        "  自动同步:      {}",
-        if config.ax.auto_sync {
-            "✅ 开启"
-        } else {
-            "❌ 关闭"
-        }
-    );
     println!("  代理地址:      {}", config.proxy.address);
     println!("  Shell:         {}", config.shell.default);
     println!("  插件数:        {}", config.shell.plugins.len());

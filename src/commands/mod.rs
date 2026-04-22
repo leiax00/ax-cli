@@ -1,14 +1,15 @@
 pub mod add;
 pub mod completion;
-pub mod link;
 pub mod config;
 pub mod edit;
 pub mod env;
 pub mod info;
 pub mod install;
+pub mod link;
 pub mod list;
 pub mod proxy;
 pub mod pull;
 pub mod push;
 pub mod rm;
 pub mod run;
+pub mod ssh;

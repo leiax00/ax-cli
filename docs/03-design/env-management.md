@@ -27,7 +27,7 @@ ax env add NAME VALUE [--tag tag1,tag2]
 
 - 创建新的环境变量条目
 - 标签可选，默认为空
-- 保存后自动 git 同步
+- 保存后仅写入 `config.d/env.yaml`，如需同步请手动执行 `ax push`
 
 ### show
 

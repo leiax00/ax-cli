@@ -30,6 +30,12 @@ Cli (顶层)
 │   ├── List
 │   ├── Run { name? }
 │   ├── Link
+│   ├── Ssh { name?, action? }
+│   │   ├── Add { name, host, user, port?, auth, password?, key?, desc? }
+│   │   ├── SetupKey { name, host, user, port?, password?, key?, desc? }
+│   │   ├── List
+│   │   ├── Rm { name }
+│   │   └── Connect { name }
 │   ├── Env(EnvAction)
 │   │   ├── Add { name, value, tag? }
 │   │   ├── Edit { name }
@@ -57,6 +63,7 @@ Cli (顶层)
 - `Commands::Install` → `commands::install::execute()`
 - `Commands::Config(action)` → `commands::config::execute(action)`
 - `Commands::Add/Edit/Rm/List/Run` → `commands::{add,edit,rm,list,run}::execute()`
+- `Commands::Ssh { .. }` → `commands::ssh::{add,setup_key,list,rm,connect}()`
 - `Commands::Env(action)` → `commands::env::execute(action)`
 - `Commands::Proxy(action)` → `commands::proxy::execute(action)`
 - 其他 → 对应模块函数
@@ -83,6 +90,25 @@ Cli (顶层)
 - 错误处理统一使用 `anyhow::Result`
 - 路径展开使用 `expand()` 处理 `~` 前缀
 - 修改配置后通过 `save_commands()` / `save_env()` 持久化
+- SSH 主机配置通过 `save_ssh_hosts()` 持久化到 `config.d/ssh.yaml`
+
+## SSH 命令
+
+`ax ssh` 同时支持“管理保存的 SSH 主机”和“按别名直接连接”两种入口：
+
+```bash
+ax ssh add lax-tsj --host lax-tsj --user user --auth password --password 'xxx'
+ax ssh setup-key lax-tsj --host lax-tsj --user user --password 'xxx'
+ax ssh hk-prod
+ax ssh list
+ax ssh rm hk-prod
+```
+
+- `ax ssh <name>`：按别名直接连接
+- `ax ssh`：未传别名时显示已保存连接
+- `ax ssh setup-key <name>`：分发本地公钥并自动保存为 `auth=key` 连接
+- `auth=key`：调用系统 `ssh`
+- `auth=password`：优先调用 `sshpass`; 若不可用，则打印密码并退化为普通 `ssh`
 
 ## Shell 函数自动生成
 

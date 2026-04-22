@@ -1,4 +1,6 @@
-use crate::config::{generate_command_functions, load_all_commands, save_commands, CommandEntry, Config};
+use crate::config::{
+    generate_command_functions, load_all_commands, save_commands, CommandEntry, Config,
+};
 use anyhow::Result;
 use std::io::{self, Write};
 

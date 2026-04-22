@@ -8,6 +8,7 @@ fontconfig
 [extras]
 jq
 fzf
+sshpass
 wget
 tree
 htop

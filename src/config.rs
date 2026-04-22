@@ -166,6 +166,61 @@ pub struct EnvEntry {
 
 pub type EnvMap = BTreeMap<String, EnvEntry>;
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SshAuth {
+    Key,
+    Password,
+}
+
+impl Default for SshAuth {
+    fn default() -> Self {
+        Self::Key
+    }
+}
+
+impl SshAuth {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Key => "key",
+            Self::Password => "password",
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(default)]
+pub struct SshHostEntry {
+    pub host: String,
+    pub user: String,
+    #[serde(default = "default_ssh_port")]
+    pub port: u16,
+    pub auth: SshAuth,
+    pub password: String,
+    pub key: String,
+    pub desc: String,
+}
+
+pub type SshHostMap = BTreeMap<String, SshHostEntry>;
+
+fn default_ssh_port() -> u16 {
+    22
+}
+
+impl Default for SshHostEntry {
+    fn default() -> Self {
+        Self {
+            host: String::new(),
+            user: String::new(),
+            port: default_ssh_port(),
+            auth: SshAuth::Key,
+            password: String::new(),
+            key: String::new(),
+            desc: String::new(),
+        }
+    }
+}
+
 /// 合并主配置的命令和 config.d/commands.yaml 的命令
 pub fn load_all_commands(config: &Config) -> Result<CommandMap> {
     let mut map = config.ax.commands.clone();
@@ -209,7 +264,10 @@ pub fn generate_command_functions(config: &Config) -> Result<()> {
 
     for (name, entry) in &entries {
         // 命令名只允许安全字符，防止注入
-        if !name.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        if !name
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+        {
             eprintln!("⚠️  跳过无效命令名: {name}（仅允许字母、数字、- 和 _）");
             continue;
         }
@@ -245,6 +303,27 @@ pub fn save_env(map: &EnvMap) -> Result<()> {
     std::fs::create_dir_all(cdir.join("config.d"))?;
     let content = serde_yaml::to_string(map)?;
     std::fs::write(cdir.join("config.d").join("env.yaml"), content)?;
+    Ok(())
+}
+
+/// 加载 SSH 主机配置
+pub fn load_all_ssh_hosts(_config: &Config) -> Result<SshHostMap> {
+    let path = config_dir().join("config.d").join("ssh.yaml");
+    if !path.exists() {
+        return Ok(SshHostMap::new());
+    }
+
+    let content = std::fs::read_to_string(&path)?;
+    let hosts: SshHostMap = serde_yaml::from_str(&content).unwrap_or_default();
+    Ok(hosts)
+}
+
+/// 保存 SSH 主机配置到 config.d/ssh.yaml
+pub fn save_ssh_hosts(map: &SshHostMap) -> Result<()> {
+    let cdir = config_dir();
+    std::fs::create_dir_all(cdir.join("config.d"))?;
+    let content = serde_yaml::to_string(map)?;
+    std::fs::write(cdir.join("config.d").join("ssh.yaml"), content)?;
     Ok(())
 }
 

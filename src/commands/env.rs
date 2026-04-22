@@ -17,7 +17,6 @@ pub fn add(name: &str, value: &str, desc: &str, tags: &[String], config: &Config
     if !tags.is_empty() {
         println!("   标签: {}", tags.join(", "));
     }
-    crate::commands::config::push(config)?;
     Ok(())
 }
 
@@ -45,7 +44,6 @@ pub fn edit(
 
     save_env(&map)?;
     println!("✅ 已修改: {name}");
-    crate::commands::config::push(config)?;
     Ok(())
 }
 
@@ -62,7 +60,6 @@ pub fn rm(names: &[String], config: &Config) -> Result<()> {
     }
     if count > 0 {
         save_env(&map)?;
-        crate::commands::config::push(config)?;
     }
     Ok(())
 }
@@ -164,7 +161,6 @@ pub fn pause(names: &[String], tag: Option<&str>, all: bool, config: &Config) ->
 
     save_env(&map)?;
     println!("⏸️  已暂停 {count} 个变量");
-    crate::commands::config::push(config)?;
     Ok(())
 }
 
@@ -196,7 +192,6 @@ pub fn resume(names: &[String], tag: Option<&str>, all: bool, config: &Config) -
 
     save_env(&map)?;
     println!("▶️  已恢复 {count} 个变量");
-    crate::commands::config::push(config)?;
     Ok(())
 }
 

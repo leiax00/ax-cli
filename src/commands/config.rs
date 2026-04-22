@@ -4,6 +4,14 @@ use crate::config::{
 };
 use anyhow::{Context, Result};
 
+fn git_command(args: &[&str], cdir: &std::path::Path) -> std::process::Command {
+    let mut cmd = std::process::Command::new("git");
+    cmd.args(args)
+        .current_dir(cdir)
+        .env("GIT_TERMINAL_PROMPT", "0");
+    cmd
+}
+
 pub fn init(force: bool, _config: &Config) -> Result<()> {
     let cdir = config_dir();
 
@@ -47,7 +55,7 @@ pub fn init(force: bool, _config: &Config) -> Result<()> {
     let pkg_file = cdir
         .join("packages")
         .join(format!("{}.txt", crate::detect::os_id()));
-    if !pkg_file.exists() {
+    if !pkg_file.exists() || force {
         let default_pkgs = match crate::detect::os_id().as_str() {
             "ubuntu" | "debian" => include_str!("../../config/packages/ubuntu.txt"),
             "fedora" | "rhel" | "centos" => include_str!("../../config/packages/fedora.txt"),
@@ -142,9 +150,7 @@ pub fn push(_config: &Config) -> Result<()> {
     }
 
     // git add
-    let add_output = std::process::Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(&cdir)
+    let add_output = git_command(&["add", "-A"], &cdir)
         .output()
         .context("git add 失败")?;
     if !add_output.status.success() {
@@ -155,18 +161,13 @@ pub fn push(_config: &Config) -> Result<()> {
     }
 
     // 检查是否有暂存变更，有则提交
-    let has_changes = !std::process::Command::new("git")
-        .args(["diff", "--cached", "--quiet"])
-        .current_dir(&cdir)
+    let has_changes = !git_command(&["diff", "--cached", "--quiet"], &cdir)
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false);
 
     if has_changes {
-        let commit_output = std::process::Command::new("git")
-            .args(["commit", "-m", "sync: ax-cli config"])
-            .current_dir(&cdir)
-            .output();
+        let commit_output = git_command(&["commit", "-m", "sync: ax-cli config"], &cdir).output();
 
         if commit_output.is_err() || !commit_output.as_ref().unwrap().status.success() {
             let stderr = match &commit_output {
@@ -178,10 +179,8 @@ pub fn push(_config: &Config) -> Result<()> {
     }
 
     // 检查是否有未推送的提交
-    let has_unpushed = std::process::Command::new("git")
-        .args(["log", "@{u}..HEAD", "--oneline"])
+    let has_unpushed = git_command(&["log", "@{u}..HEAD", "--oneline"], &cdir)
         .stderr(std::process::Stdio::null())
-        .current_dir(&cdir)
         .output()
         .map(|o| !String::from_utf8_lossy(&o.stdout).trim().is_empty())
         .unwrap_or(false);
@@ -193,18 +192,16 @@ pub fn push(_config: &Config) -> Result<()> {
     }
 
     // 获取当前分支名
-    let branch_output = std::process::Command::new("git")
-        .args(["branch", "--show-current"])
-        .current_dir(&cdir)
+    let branch_output = git_command(&["branch", "--show-current"], &cdir)
         .output()
         .context("获取当前分支失败")?;
-    let branch = String::from_utf8_lossy(&branch_output.stdout).trim().to_string();
+    let branch = String::from_utf8_lossy(&branch_output.stdout)
+        .trim()
+        .to_string();
 
     // 检查是否有 upstream
-    let has_upstream = std::process::Command::new("git")
-        .args(["rev-parse", "--abbrev-ref", "@{u}"])
+    let has_upstream = git_command(&["rev-parse", "--abbrev-ref", "@{u}"], &cdir)
         .stderr(std::process::Stdio::null())
-        .current_dir(&cdir)
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false);
@@ -215,10 +212,8 @@ pub fn push(_config: &Config) -> Result<()> {
         vec!["push", "-u", "origin", &branch]
     };
 
-    let output = std::process::Command::new("git")
-        .args(&push_args)
-        .current_dir(&cdir)
-        .output();
+    println!("☁️  正在同步配置到远程仓库...");
+    let output = git_command(&push_args, &cdir).output();
 
     if output.is_ok() && output.as_ref().unwrap().status.success() {
         println!("☁️  已推送到远程仓库");
@@ -228,6 +223,13 @@ pub fn push(_config: &Config) -> Result<()> {
         if stderr.contains("no remote") {
             println!("⚠️  推送失败，请先设置远程仓库：");
             println!("   ax config remote <url>");
+        } else if stderr.contains("terminal prompts disabled")
+            || stderr.contains("could not read Username")
+            || stderr.contains("could not read Password")
+            || stderr.contains("authentication failed")
+        {
+            println!("⚠️  推送失败：远程仓库需要交互式认证");
+            println!("   可以先执行 git credential / SSH key 配置，或稍后手动运行 ax push");
         } else {
             println!("⚠️  推送失败: {stderr}");
         }
@@ -479,4 +481,51 @@ pub fn path(_config: &Config) -> Result<()> {
     let cdir = config_dir();
     println!("{}", cdir.display());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+    use std::sync::{Mutex, OnceLock};
+
+    fn env_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    #[test]
+    fn init_force_overwrites_existing_package_list() {
+        let _guard = env_lock().lock().unwrap();
+        let original = std::env::var("AX_CONFIG_DIR").ok();
+        let temp = std::env::temp_dir().join(format!(
+            "ax-cli-init-force-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&temp);
+
+        std::env::set_var("AX_CONFIG_DIR", &temp);
+
+        let result = (|| -> Result<()> {
+            let packages_dir = temp.join("packages");
+            std::fs::create_dir_all(&packages_dir)?;
+            let pkg_file = packages_dir.join(format!("{}.txt", crate::detect::os_id()));
+            std::fs::write(&pkg_file, "manually modified")?;
+
+            init(true, &Config::default())?;
+
+            let content = std::fs::read_to_string(&pkg_file)?;
+            assert_ne!(content, "manually modified");
+            assert!(content.contains("[core]"));
+            Ok(())
+        })();
+
+        let _ = std::fs::remove_dir_all(&temp);
+        match original {
+            Some(value) => std::env::set_var("AX_CONFIG_DIR", value),
+            None => std::env::remove_var("AX_CONFIG_DIR"),
+        }
+
+        result.unwrap();
+    }
 }

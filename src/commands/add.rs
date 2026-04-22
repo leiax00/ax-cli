@@ -1,4 +1,6 @@
-use crate::config::{config_dir, generate_command_functions, load_all_commands, save_commands, Config};
+use crate::config::{
+    config_dir, generate_command_functions, load_all_commands, save_commands, Config,
+};
 use anyhow::{bail, Result};
 use std::io::{self, Read};
 
@@ -11,7 +13,11 @@ pub fn execute(
     config: &Config,
 ) -> Result<()> {
     let mut map = load_all_commands(config)?;
-    let name = if raw { name.to_string() } else { ensure_prefix(name) };
+    let name = if raw {
+        name.to_string()
+    } else {
+        ensure_prefix(name)
+    };
 
     if map.contains_key(&name) {
         println!("⚠️  命令 '{name}' 已存在，请先删除或使用 edit");
@@ -36,7 +42,10 @@ pub fn execute(
     save_commands(&map)?;
     generate_command_functions(config)?;
     println!("✅ 已添加: {name} - {desc}");
-    println!("   运行 source {}/config.d/commands.sh 使命令生效", config_dir().display());
+    println!(
+        "   运行 source {}/config.d/commands.sh 使命令生效",
+        config_dir().display()
+    );
 
     Ok(())
 }

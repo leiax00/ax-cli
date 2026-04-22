@@ -76,6 +76,13 @@ ax rm / del <名>                 # 删除
 ax run [名]                      # 执行
 ax <名>                          # 快捷执行
 
+# SSH 连接管理
+ax ssh add <别名> --host <主机> --user <用户> --auth key|password [--port 22] [--key <私钥>] [--password <密码>] [-d 描述]
+ax ssh setup-key <别名> --host <主机> --user <用户> [--port 22] [--password <密码>] [--key <私钥>] [-d 描述]
+ax ssh [别名]                    # 直接连接；省略别名时列出已保存连接
+ax ssh list / ls                 # 列表
+ax ssh rm / del <别名>           # 删除
+
 # 系统管理
 ax install                       # 安装 core 包 + 工具 + 配置部署
 ax install --extras              # 额外安装开发增强包
@@ -98,6 +105,7 @@ ax info                          # 查看当前配置
 ax <Tab>
 ax config <Tab>
 ax env <Tab>
+ax ssh <Tab>
 ax env add --<Tab>
 ax proxy <Tab>
 ```
@@ -136,7 +144,8 @@ AX_LANG=en ax completion zsh
 ├── config.yaml                # 主配置
 ├── config.d/                  # 分块配置（自动合并）
 │   ├── commands.yaml          # 用户动态命令
-│   └── env.yaml               # 用户动态环境变量
+│   ├── env.yaml               # 用户动态环境变量
+│   └── ssh.yaml               # 用户动态 SSH 连接
 ├── bash/.bashrc               # bash 配置片段（由 ~/.bashrc 引入）
 ├── bash/.zshrc                # zsh 配置片段（由 ~/.zshrc 引入）
 ├── wezterm/wezterm.lua        # 终端配置
@@ -187,6 +196,7 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 | 配置导入导出 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax config export/import` |
 | 自定义命令 CRUD | ✅ | ✅ | ✅ | ✅ | ✅ | `ax add/edit/rm/list` |
 | 自定义命令执行 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax run [name]` |
+| SSH 连接管理 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax ssh add/list/rm` + `ax ssh <name>` |
 | 环境变量管理 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax env add/edit/show/pause/resume/tags` |
 | 代理状态查看 | ✅ | ✅ | ✅ | ✅ | ✅ | `ax proxy status` |
 | Help 多语言 | ✅ | ✅ | ✅ | ✅ | ✅ | `AX_LANG` / `LANG` 驱动 |
@@ -212,6 +222,7 @@ Windows 便携式：把 `ax.exe` 和 `config/` 放同一目录即可。
 | 语法高亮 | ✅ | ❌ | ❌ | ❌ | ❌ | 依赖 `zsh-syntax-highlighting` |
 | `ax proxy on/off` 直接修改当前 shell 环境 | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | zsh/bash 通过托管函数直接 `eval`；PowerShell/cmd 需手动执行提示命令 |
 | `ax env load` 输出当前 shell 可执行脚本 | ✅ | ✅ | ✅ | ✅ | ✅ | 自动按 shell 输出 `export` / `$env:` / `set` |
+| `ax ssh <name>` 调起系统 SSH | ✅ | ✅ | ✅ | ✅ | ✅ | password 模式优先用 `sshpass`，不可用时打印密码后退化为普通 `ssh` |
 | 自定义命令快捷函数 | ✅ | ✅ | ❌ | ❌ | ❌ | `commands.sh` 只为 bash/zsh 生成并 source |
 | 重新加载托管配置即可生效 | ✅ | ✅ | ❌ | ❌ | ❌ | `source ~/.config/axconfig/bash/.zshrc/.bashrc` |
 

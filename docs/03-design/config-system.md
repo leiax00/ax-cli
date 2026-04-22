@@ -11,7 +11,8 @@
 ├── config.yaml            # 主配置文件（部署链接、包列表路径等）
 ├── config.d/              # 动态数据目录
 │   ├── commands.yaml      # 用户自定义命令
-│   └── env.yaml           # 用户环境变量
+│   ├── env.yaml           # 用户环境变量
+│   └── ssh.yaml           # 用户 SSH 主机配置
 └── .git/                  # 配置仓库（用于同步）
 ```
 
@@ -34,11 +35,13 @@
 - `config.yaml`：静态配置（部署目标、包列表路径、shell 插件等）
 - `config.d/commands.yaml`：用户动态命令数据
 - `config.d/env.yaml`：用户动态环境变量数据
+- `config.d/ssh.yaml`：用户动态 SSH 主机数据
 
 ### 合并规则
 
 - 命令加载：`load_all_commands()` 合并主配置中的 `commands` 字段和 `config.d/commands.yaml`
 - 环境变量：独立存储在 `config.d/env.yaml`，不与主配置合并
+- SSH 主机：独立存储在 `config.d/ssh.yaml`
 
 ## 主配置结构 (Config)
 
@@ -92,6 +95,20 @@ proxy:
   paused: false
 ```
 
+## SSH 主机存储结构 (SshHostEntry)
+
+```yaml
+# config.d/ssh.yaml
+lax-tsj:
+  host: lax-tsj
+  user: user
+  port: 22
+  auth: password
+  password: "xxx"
+  key: ""
+  desc: 洛杉矶云主机
+```
+
 ## 内置模板
 
 `config.rs` 中定义了以下配置模板（`ax config init` 时写入）：
@@ -109,7 +126,7 @@ proxy:
 - 基于 git：`config init` 时自动 `git init`
 - `push`：`git add -A && git commit && git push`
 - `pull`：`git pull`
-- 环境变量和命令修改后自动触发 git 同步（如果配置了 remote）
+- 配置修改只写入本地目录；需要同步到远程时手动执行 `ax push` 或 `ax config push`
 
 ## 导入导出
 

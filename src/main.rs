@@ -86,7 +86,14 @@ fn main() -> Result<()> {
             file,
             raw,
         }) => {
-            commands::add::execute(&name, cmd.as_deref(), desc.as_deref(), file.as_deref(), raw, &config)?;
+            commands::add::execute(
+                &name,
+                cmd.as_deref(),
+                desc.as_deref(),
+                file.as_deref(),
+                raw,
+                &config,
+            )?;
         }
         Some(cli::Commands::Edit { name }) => {
             commands::edit::execute(&name, &config)?;
@@ -119,6 +126,57 @@ fn main() -> Result<()> {
         Some(cli::Commands::Proxy { action }) => {
             commands::proxy::execute(&action, &config)?;
         }
+        Some(cli::Commands::Ssh { name, action }) => match (name.as_deref(), action) {
+            (
+                _,
+                Some(cli::SshAction::Add {
+                    name,
+                    host,
+                    user,
+                    port,
+                    auth,
+                    password,
+                    key,
+                    desc,
+                }),
+            ) => commands::ssh::add(
+                &name,
+                &host,
+                &user,
+                port,
+                &auth,
+                password.as_deref(),
+                key.as_deref(),
+                desc.as_deref(),
+                &config,
+            )?,
+            (
+                _,
+                Some(cli::SshAction::SetupKey {
+                    name,
+                    host,
+                    user,
+                    port,
+                    password,
+                    key,
+                    desc,
+                }),
+            ) => commands::ssh::setup_key(
+                &name,
+                &host,
+                &user,
+                port,
+                password.as_deref(),
+                key.as_deref(),
+                desc.as_deref(),
+                &config,
+            )?,
+            (_, Some(cli::SshAction::List)) => commands::ssh::list(&config)?,
+            (_, Some(cli::SshAction::Rm { name })) => commands::ssh::rm(&name, &config)?,
+            (_, Some(cli::SshAction::Connect { name })) => commands::ssh::connect(&name, &config)?,
+            (Some(name), None) => commands::ssh::connect(name, &config)?,
+            (None, None) => commands::ssh::list(&config)?,
+        },
         Some(cli::Commands::Completion { shell, print }) => {
             commands::completion::execute(&shell, print, &config)?;
         }

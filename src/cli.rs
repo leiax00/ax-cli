@@ -71,6 +71,13 @@ pub enum Commands {
         #[command(subcommand)]
         action: ProxyAction,
     },
+    /// SSH 连接管理
+    Ssh {
+        /// 连接别名；提供时直接连接
+        name: Option<String>,
+        #[command(subcommand)]
+        action: Option<SshAction>,
+    },
     /// 生成并安装 shell 补全
     Completion {
         shell: String,
@@ -199,6 +206,68 @@ pub enum ProxyAction {
     Status,
 }
 
+#[derive(Subcommand)]
+pub enum SshAction {
+    /// 保存 SSH 连接配置
+    Add {
+        /// 连接别名
+        name: String,
+        /// SSH 主机或 IP
+        #[arg(short = 'H', long)]
+        host: String,
+        /// SSH 用户名
+        #[arg(short = 'u', long)]
+        user: String,
+        /// 端口，默认 22
+        #[arg(short = 'p', long)]
+        port: Option<u16>,
+        /// 认证方式：key 或 password
+        #[arg(short = 'a', long)]
+        auth: String,
+        /// 明文密码（auth=password 时必填）
+        #[arg(short = 'P', long)]
+        password: Option<String>,
+        /// 私钥路径（auth=key 时可选）
+        #[arg(short = 'i', long)]
+        key: Option<String>,
+        /// 描述
+        #[arg(short, long)]
+        desc: Option<String>,
+    },
+    /// 配置 SSH key 免密并保存连接
+    SetupKey {
+        /// 连接别名
+        name: String,
+        /// SSH 主机或 IP
+        #[arg(short = 'H', long)]
+        host: String,
+        /// SSH 用户名
+        #[arg(short = 'u', long)]
+        user: String,
+        /// 端口，默认 22
+        #[arg(short = 'p', long)]
+        port: Option<u16>,
+        /// 登录密码；留空则走交互式输入
+        #[arg(short = 'P', long)]
+        password: Option<String>,
+        /// 私钥路径，默认 ~/.ssh/id_ed25519
+        #[arg(short = 'i', long)]
+        key: Option<String>,
+        /// 描述
+        #[arg(short, long)]
+        desc: Option<String>,
+    },
+    /// 列出已保存的 SSH 连接
+    #[command(alias = "ls")]
+    List,
+    /// 删除已保存的 SSH 连接
+    #[command(alias = "del")]
+    Rm { name: String },
+    /// 连接到已保存的 SSH 主机
+    #[command(alias = "use")]
+    Connect { name: String },
+}
+
 pub fn current_language() -> Language {
     current_language_from(
         ["AX_LANG", "LC_ALL", "LC_MESSAGES", "LANG"]
@@ -314,7 +383,9 @@ fn localize_zh(cmd: Command) -> Command {
         .mut_subcommand("add", |c| {
             c.about("添加自定义命令")
                 .mut_arg("name", |arg| arg.help("命令名称"))
-                .mut_arg("cmd", |arg| arg.help("命令内容，传 - 从 stdin 读取，省略则打开编辑器"))
+                .mut_arg("cmd", |arg| {
+                    arg.help("命令内容，传 - 从 stdin 读取，省略则打开编辑器")
+                })
                 .mut_arg("desc", |arg| arg.help("命令描述"))
                 .mut_arg("file", |arg| arg.help("从文件读取命令内容"))
                 .mut_arg("raw", |arg| arg.help("不自动添加 ax- 前缀"))
@@ -348,9 +419,49 @@ fn localize_zh(cmd: Command) -> Command {
                 .mut_subcommand("off", |c| c.about("关闭代理"))
                 .mut_subcommand("status", |c| c.about("显示代理状态"))
         })
+        .mut_subcommand("ssh", |sub| {
+            sub.about("SSH 连接管理")
+                .mut_arg("name", |arg| arg.help("连接别名；留空则列出已保存连接"))
+                .mut_subcommand("add", |c| {
+                    c.about("保存 SSH 连接配置")
+                        .mut_arg("name", |arg| arg.help("连接别名"))
+                        .mut_arg("host", |arg| arg.help("SSH 主机或 IP"))
+                        .mut_arg("user", |arg| arg.help("SSH 用户名"))
+                        .mut_arg("port", |arg| arg.help("端口，默认 22"))
+                        .mut_arg("auth", |arg| arg.help("认证方式：key 或 password"))
+                        .mut_arg("password", |arg| {
+                            arg.help("明文密码（auth=password 时必填）")
+                        })
+                        .mut_arg("key", |arg| arg.help("私钥路径（auth=key 时可选）"))
+                        .mut_arg("desc", |arg| arg.help("连接描述"))
+                })
+                .mut_subcommand("setup-key", |c| {
+                    c.about("配置 SSH key 免密并保存连接")
+                        .mut_arg("name", |arg| arg.help("连接别名"))
+                        .mut_arg("host", |arg| arg.help("SSH 主机或 IP"))
+                        .mut_arg("user", |arg| arg.help("SSH 用户名"))
+                        .mut_arg("port", |arg| arg.help("端口，默认 22"))
+                        .mut_arg("password", |arg| {
+                            arg.help("登录密码；留空则走交互式输入")
+                        })
+                        .mut_arg("key", |arg| arg.help("私钥路径，默认 ~/.ssh/id_ed25519"))
+                        .mut_arg("desc", |arg| arg.help("连接描述"))
+                })
+                .mut_subcommand("list", |c| c.about("列出已保存的 SSH 连接"))
+                .mut_subcommand("rm", |c| {
+                    c.about("删除已保存的 SSH 连接")
+                        .mut_arg("name", |arg| arg.help("连接别名"))
+                })
+                .mut_subcommand("connect", |c| {
+                    c.about("连接到已保存的 SSH 主机")
+                        .mut_arg("name", |arg| arg.help("连接别名"))
+                })
+        })
         .mut_subcommand("completion", |c| {
             c.about("生成并安装 shell 补全")
-                .mut_arg("shell", |arg| arg.help("目标 shell：bash、zsh、powershell（5.1+7）、pwsh（仅 7）"))
+                .mut_arg("shell", |arg| {
+                    arg.help("目标 shell：bash、zsh、powershell（5.1+7）、pwsh（仅 7）")
+                })
                 .mut_arg("print", |arg| arg.help("打印补全脚本而不是安装"))
         })
         .mut_subcommand("info", |c| c.about("显示当前配置和路径"))
@@ -446,7 +557,9 @@ fn localize_en(cmd: Command) -> Command {
                 arg.help("Command name; omit to use interactive selection")
             })
         })
-        .mut_subcommand("link", |c| c.about("Refresh shell functions for custom commands"))
+        .mut_subcommand("link", |c| {
+            c.about("Refresh shell functions for custom commands")
+        })
         .mut_subcommand("push", |c| c.about("Push config to the remote repository"))
         .mut_subcommand("pull", |c| {
             c.about("Pull config from the remote repository")
@@ -466,6 +579,52 @@ fn localize_en(cmd: Command) -> Command {
                 })
                 .mut_subcommand("off", |c| c.about("Disable proxy"))
                 .mut_subcommand("status", |c| c.about("Show proxy status"))
+        })
+        .mut_subcommand("ssh", |sub| {
+            sub.about("Manage SSH connections")
+                .mut_arg("name", |arg| {
+                    arg.help("Connection alias; omit to list saved connections")
+                })
+                .mut_subcommand("add", |c| {
+                    c.about("Save an SSH connection")
+                        .mut_arg("name", |arg| arg.help("Connection alias"))
+                        .mut_arg("host", |arg| arg.help("SSH host or IP"))
+                        .mut_arg("user", |arg| arg.help("SSH username"))
+                        .mut_arg("port", |arg| arg.help("Port, defaults to 22"))
+                        .mut_arg("auth", |arg| {
+                            arg.help("Authentication mode: key or password")
+                        })
+                        .mut_arg("password", |arg| {
+                            arg.help("Plain-text password (required for auth=password)")
+                        })
+                        .mut_arg("key", |arg| {
+                            arg.help("Private key path (optional for auth=key)")
+                        })
+                        .mut_arg("desc", |arg| arg.help("Connection description"))
+                })
+                .mut_subcommand("setup-key", |c| {
+                    c.about("Set up SSH key login and save the connection")
+                        .mut_arg("name", |arg| arg.help("Connection alias"))
+                        .mut_arg("host", |arg| arg.help("SSH host or IP"))
+                        .mut_arg("user", |arg| arg.help("SSH username"))
+                        .mut_arg("port", |arg| arg.help("Port, defaults to 22"))
+                        .mut_arg("password", |arg| {
+                            arg.help("Login password; omit to use interactive input")
+                        })
+                        .mut_arg("key", |arg| {
+                            arg.help("Private key path, defaults to ~/.ssh/id_ed25519")
+                        })
+                        .mut_arg("desc", |arg| arg.help("Connection description"))
+                })
+                .mut_subcommand("list", |c| c.about("List saved SSH connections"))
+                .mut_subcommand("rm", |c| {
+                    c.about("Remove a saved SSH connection")
+                        .mut_arg("name", |arg| arg.help("Connection alias"))
+                })
+                .mut_subcommand("connect", |c| {
+                    c.about("Connect to a saved SSH host")
+                        .mut_arg("name", |arg| arg.help("Connection alias"))
+                })
         })
         .mut_subcommand("completion", |c| {
             c.about("Generate and install shell completion")
