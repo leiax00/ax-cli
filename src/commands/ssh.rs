@@ -170,23 +170,11 @@ fn run_command(mut cmd: Command) -> Result<()> {
 }
 
 fn has_sshpass() -> bool {
-    Command::new("sshpass")
-        .arg("-V")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    which::which("sshpass").is_ok()
 }
 
 fn has_ssh_copy_id() -> bool {
-    Command::new("ssh-copy-id")
-        .arg("-h")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    which::which("ssh-copy-id").is_ok()
 }
 
 fn resolve_key_path(key: Option<&str>) -> PathBuf {
