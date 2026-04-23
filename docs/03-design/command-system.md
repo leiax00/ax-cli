@@ -105,7 +105,7 @@ ax ssh rm hk-prod
 ```
 
 - `ax ssh <name>`：按别名直接连接
-- `ax ssh`：未传别名时显示已保存连接
+- `ax ssh`：未传别名时进入交互选择（有 fzf 用 fzf 模糊搜索，否则回退到编号选择）
 - `ax ssh setup-key <name>`：分发本地公钥并自动保存为 `auth=key` 连接
 - `auth=key`：调用系统 `ssh`
 - `auth=password`：优先调用 `sshpass`; 若不可用，则打印密码并退化为普通 `ssh`

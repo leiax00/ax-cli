@@ -175,7 +175,7 @@ fn main() -> Result<()> {
             (_, Some(cli::SshAction::Rm { name })) => commands::ssh::rm(&name, &config)?,
             (_, Some(cli::SshAction::Connect { name })) => commands::ssh::connect(&name, &config)?,
             (Some(name), None) => commands::ssh::connect(name, &config)?,
-            (None, None) => commands::ssh::list(&config)?,
+            (None, None) => commands::ssh::select_and_connect(&config)?,
         },
         Some(cli::Commands::Completion { shell, print }) => {
             commands::completion::execute(&shell, print, &config)?;

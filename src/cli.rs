@@ -71,9 +71,9 @@ pub enum Commands {
         #[command(subcommand)]
         action: ProxyAction,
     },
-    /// SSH 连接管理
+    /// SSH 连接管理（留空进入交互选择）
     Ssh {
-        /// 连接别名；提供时直接连接
+        /// 连接别名；留空则进入交互选择
         name: Option<String>,
         #[command(subcommand)]
         action: Option<SshAction>,
@@ -421,7 +421,7 @@ fn localize_zh(cmd: Command) -> Command {
         })
         .mut_subcommand("ssh", |sub| {
             sub.about("SSH 连接管理")
-                .mut_arg("name", |arg| arg.help("连接别名；留空则列出已保存连接"))
+                .mut_arg("name", |arg| arg.help("连接别名；留空则进入交互选择"))
                 .mut_subcommand("add", |c| {
                     c.about("保存 SSH 连接配置")
                         .mut_arg("name", |arg| arg.help("连接别名"))
@@ -583,7 +583,7 @@ fn localize_en(cmd: Command) -> Command {
         .mut_subcommand("ssh", |sub| {
             sub.about("Manage SSH connections")
                 .mut_arg("name", |arg| {
-                    arg.help("Connection alias; omit to list saved connections")
+                    arg.help("Connection alias; omit for interactive selection")
                 })
                 .mut_subcommand("add", |c| {
                     c.about("Save an SSH connection")

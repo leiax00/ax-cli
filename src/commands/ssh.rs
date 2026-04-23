@@ -1,8 +1,9 @@
 use crate::config::{
-    expand_home, load_all_ssh_hosts, save_ssh_hosts, Config, SshAuth, SshHostEntry,
+    expand_home, load_all_ssh_hosts, save_ssh_hosts, Config, SshAuth, SshHostEntry, SshHostMap,
 };
 use anyhow::{anyhow, bail, Result};
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -119,6 +120,123 @@ pub fn connect(name: &str, config: &Config) -> Result<()> {
     }
 }
 
+pub fn select_and_connect(config: &Config) -> Result<()> {
+    let map = load_all_ssh_hosts(config)?;
+
+    if map.is_empty() {
+        println!("📋 暂无 SSH 连接");
+        return Ok(());
+    }
+
+    if has_fzf() {
+        match select_with_fzf(&map)? {
+            Some(name) => connect(&name, config),
+            None => Ok(()),
+        }
+    } else {
+        select_with_numbered(&map, config)
+    }
+}
+
+fn select_with_fzf(map: &SshHostMap) -> Result<Option<String>> {
+    let lines: Vec<String> = map
+        .iter()
+        .map(|(name, e)| {
+            format!(
+                "{}\t{}@{}:{}\t{}\t{}",
+                name,
+                e.user,
+                e.host,
+                e.port,
+                e.auth.as_str(),
+                if e.desc.is_empty() { String::new() } else { e.desc.clone() }
+            )
+        })
+        .collect();
+
+    let input = lines.join("\n");
+
+    let mut child = Command::new("fzf")
+        .args([
+            "--prompt=SSH> ",
+            "--header=选择 SSH 连接 (ESC 取消)",
+            "--tiebreak=index",
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin.write_all(input.as_bytes())?;
+    }
+
+    let output = child.wait_with_output()?;
+
+    if !output.status.success() {
+        return Ok(None);
+    }
+
+    let selected = String::from_utf8_lossy(&output.stdout);
+    let name = selected.trim().split('\t').next().unwrap_or("").trim();
+
+    if name.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(name.to_string()))
+    }
+}
+
+fn select_with_numbered(map: &SshHostMap, config: &Config) -> Result<()> {
+    println!("📋 SSH 连接列表：");
+    println!("─────────────────────────────────────────────────────────");
+
+    let entries: Vec<_> = map.iter().collect();
+
+    for (i, (name, entry)) in entries.iter().enumerate() {
+        let detail = if entry.desc.is_empty() {
+            String::new()
+        } else {
+            format!("  # {}", entry.desc)
+        };
+        println!(
+            "  {:3}) {:<16} {}@{}:{} [{}]{}",
+            i + 1,
+            name,
+            entry.user,
+            entry.host,
+            entry.port,
+            entry.auth.as_str(),
+            detail
+        );
+    }
+
+    println!("");
+    print!("输入编号连接 (0 取消): ");
+    std::io::stdout().flush()?;
+
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
+    let input = input.trim();
+
+    if input == "0" || input.is_empty() {
+        return Ok(());
+    }
+
+    if let Ok(idx) = input.parse::<usize>() {
+        if idx > 0 && idx <= entries.len() {
+            let (name, _) = entries[idx - 1];
+            return connect(name, config);
+        }
+    }
+
+    if map.contains_key(input) {
+        return connect(input, config);
+    }
+
+    bail!("❌ 无效选择: {input}");
+}
+
 pub fn setup_key(
     name: &str,
     host: &str,
@@ -175,6 +293,10 @@ fn has_sshpass() -> bool {
 
 fn has_ssh_copy_id() -> bool {
     which::which("ssh-copy-id").is_ok()
+}
+
+fn has_fzf() -> bool {
+    which::which("fzf").is_ok()
 }
 
 fn resolve_key_path(key: Option<&str>) -> PathBuf {
