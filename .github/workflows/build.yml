@@ -25,32 +25,45 @@ env:
   BINARY_NAME: ax
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        name: Select build targets
+        shell: bash
+        run: |
+          case "${{ github.event.inputs.target }}" in
+            "" | all)
+              matrix='{"include":[{"target":"x86_64-unknown-linux-gnu","os":"ubuntu-latest","artifact":"ax-linux-x86_64"},{"target":"aarch64-unknown-linux-gnu","os":"ubuntu-latest","artifact":"ax-linux-aarch64"},{"target":"x86_64-apple-darwin","os":"macos-latest","artifact":"ax-macos-x86_64"},{"target":"aarch64-apple-darwin","os":"macos-latest","artifact":"ax-macos-aarch64"},{"target":"x86_64-pc-windows-msvc","os":"windows-latest","artifact":"ax-windows-x86_64.exe"}]}'
+              ;;
+            x86_64-unknown-linux-gnu)
+              matrix='{"include":[{"target":"x86_64-unknown-linux-gnu","os":"ubuntu-latest","artifact":"ax-linux-x86_64"}]}'
+              ;;
+            aarch64-unknown-linux-gnu)
+              matrix='{"include":[{"target":"aarch64-unknown-linux-gnu","os":"ubuntu-latest","artifact":"ax-linux-aarch64"}]}'
+              ;;
+            x86_64-apple-darwin)
+              matrix='{"include":[{"target":"x86_64-apple-darwin","os":"macos-latest","artifact":"ax-macos-x86_64"}]}'
+              ;;
+            aarch64-apple-darwin)
+              matrix='{"include":[{"target":"aarch64-apple-darwin","os":"macos-latest","artifact":"ax-macos-aarch64"}]}'
+              ;;
+            x86_64-pc-windows-msvc)
+              matrix='{"include":[{"target":"x86_64-pc-windows-msvc","os":"windows-latest","artifact":"ax-windows-x86_64.exe"}]}'
+              ;;
+          esac
+
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+
   build:
+    needs: prepare
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            artifact: ax-linux-x86_64
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            artifact: ax-linux-aarch64
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            artifact: ax-macos-x86_64
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            artifact: ax-macos-aarch64
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            artifact: ax-windows-x86_64.exe
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
 
     runs-on: ${{ matrix.os }}
-    # 如果用户指定了单个目标，跳过其他
-    if: |
-      github.event.inputs.target == 'all' ||
-      github.event.inputs.target == matrix.target
 
     steps:
       - uses: actions/checkout@v4
