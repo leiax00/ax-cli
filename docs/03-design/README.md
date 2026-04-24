@@ -12,3 +12,4 @@
 | [proxy-system.md](proxy-system.md) | 代理系统：shell 适配、状态管理 | 开发 |
 | [platform-support.md](platform-support.md) | 多平台支持：OS 检测、包管理器映射 | 开发 |
 | [packages.md](packages.md) | 包列表说明：core/extras 分组与各包用途 | 开发 |
+| [terminal-keybindings.md](terminal-keybindings.md) | 终端快捷键：WezTerm + tmux 职责分离方案 | 用户/开发 |

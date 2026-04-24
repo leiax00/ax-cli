@@ -38,15 +38,23 @@ local config = {
   enable_scroll_bar = false,
 }
 
--- === 快捷键 (Leader: Ctrl+A) ===
-config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 5000 }
+-- === 快捷键 ===
+-- Leader: Ctrl+Q（与 tmux 的 Ctrl+A 前缀不冲突）
+-- 职责分离：tab 归 WezTerm，pane/window 归 tmux
+-- 详见 docs/03-design/terminal-keybindings.md
+config.leader = { key = 'q', mods = 'CTRL', timeout_milliseconds = 5000 }
 
 config.keys = {
-  -- Leader + a → 发送 Ctrl+A (tmux 兼容)
-  { key = 'a', mods = 'LEADER|CTRL', action = act.SendKey { key = 'a', mods = 'CTRL' } },
-
-  -- 标签页
-  { key = 't', mods = 'CTRL', action = act.ShowTabNavigator },
+  -- 标签页（直接绑定，无需 Leader）
+  { key = 't', mods = 'CTRL|SHIFT', action = act.SpawnTab 'CurrentPaneDomain' },
+  { key = 'w', mods = 'CTRL|SHIFT', action = act.CloseCurrentTab { confirm = true } },
+  { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
+  { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
+  { key = '1', mods = 'CTRL', action = act.ActivateTab(0) },
+  { key = '2', mods = 'CTRL', action = act.ActivateTab(1) },
+  { key = '3', mods = 'CTRL', action = act.ActivateTab(2) },
+  { key = '4', mods = 'CTRL', action = act.ActivateTab(3) },
+  { key = '5', mods = 'CTRL', action = act.ActivateTab(4) },
   { key = ',', mods = 'LEADER', action = act.PromptInputLine {
     description = '重命名标签',
     action = wezterm.action_callback(function(window, pane, line)
@@ -55,17 +63,8 @@ config.keys = {
       end
     end),
   }},
-  { key = 'c', mods = 'LEADER', action = act.SpawnTab 'CurrentPaneDomain' },
-  { key = 'n', mods = 'LEADER', action = act.ActivateTabRelative(1) },
-  { key = 'p', mods = 'LEADER', action = act.ActivateTabRelative(-1) },
-  { key = 'w', mods = 'LEADER', action = act.CloseCurrentTab { confirm = true } },
-  { key = '1', mods = 'LEADER', action = act.ActivateTab(0) },
-  { key = '2', mods = 'LEADER', action = act.ActivateTab(1) },
-  { key = '3', mods = 'LEADER', action = act.ActivateTab(2) },
-  { key = '4', mods = 'LEADER', action = act.ActivateTab(3) },
-  { key = '5', mods = 'LEADER', action = act.ActivateTab(4) },
 
-  -- 分屏
+  -- 分屏（Leader 后按，无 tmux 时使用）
   { key = '\\', mods = 'LEADER', action = act.SplitHorizontal { domain = 'CurrentPaneDomain' } },
   { key = '-', mods = 'LEADER', action = act.SplitVertical { domain = 'CurrentPaneDomain' } },
   { key = 'h', mods = 'LEADER', action = act.ActivatePaneDirection 'Left' },
@@ -80,14 +79,12 @@ config.keys = {
   { key = 'x', mods = 'LEADER', action = act.CloseCurrentPane { confirm = true } },
 
   -- 复制粘贴
-  { key = '[', mods = 'LEADER', action = act.ActivateCopyMode },
+  { key = 'c', mods = 'CTRL|SHIFT', action = act.CopyTo 'ClipboardAndPrimarySelection' },
   { key = 'v', mods = 'CTRL|SHIFT', action = act.PasteFrom 'Clipboard' },
 
   -- 滚动
   { key = 'PageUp', mods = 'SHIFT', action = act.ScrollByPage(-1) },
   { key = 'PageDown', mods = 'SHIFT', action = act.ScrollByPage(1) },
-  { key = 'u', mods = 'LEADER', action = act.ScrollByPage(-0.5) },
-  { key = 'd', mods = 'LEADER', action = act.ScrollByPage(0.5) },
 
   -- 字体大小
   { key = '=', mods = 'CTRL', action = act.IncreaseFontSize },

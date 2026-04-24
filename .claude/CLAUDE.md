@@ -86,6 +86,7 @@ src/
 | 代理功能 | `docs/03-design/proxy-system.md` |
 | 平台支持 | `docs/03-design/platform-support.md` |
 | 包列表 | `docs/03-design/packages.md` |
+| 终端快捷键 | `docs/03-design/terminal-keybindings.md` |
 | 模块依赖 | `docs/04-architecture/module-dependencies.md` |
 | 新增功能 | `docs/04-architecture/extension-guide.md` |
 
