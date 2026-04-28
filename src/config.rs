@@ -244,6 +244,14 @@ pub fn save_commands(map: &CommandMap) -> Result<()> {
     Ok(())
 }
 
+pub fn command_with_forwarded_args(cmd: &str) -> String {
+    if cmd.contains("$@") {
+        cmd.to_string()
+    } else {
+        format!(r#"{cmd} "$@""#)
+    }
+}
+
 /// 根据 commands.yaml 生成 shell 函数文件（供 source 加载）
 /// 每个命令生成同名函数，内联命令内容，使 cd 等内置命令在当前 shell 生效
 pub fn generate_command_functions(config: &Config) -> Result<()> {
@@ -272,7 +280,7 @@ pub fn generate_command_functions(config: &Config) -> Result<()> {
             continue;
         }
         // 用 eval + 单引号包裹命令内容，避免 source 时执行替换
-        let escaped = entry.cmd.replace('\'', "'\\''");
+        let escaped = command_with_forwarded_args(&entry.cmd).replace('\'', "'\\''");
         lines.push_str(name);
         lines.push_str("() {\n  eval '");
         lines.push_str(&escaped);

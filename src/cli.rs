@@ -51,7 +51,12 @@ pub enum Commands {
     #[command(alias = "del")]
     Rm { name: String },
     /// 执行命令（未指定名称时进入交互选择）
-    Run { name: Option<String> },
+    Run {
+        name: Option<String>,
+        /// 透传给自定义命令的额外参数
+        #[arg(last = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
     /// 刷新自定义命令的 shell 函数（或使用 source 重新加载）
     Link,
     /// 推送配置到远程仓库
@@ -441,9 +446,7 @@ fn localize_zh(cmd: Command) -> Command {
                         .mut_arg("host", |arg| arg.help("SSH 主机或 IP"))
                         .mut_arg("user", |arg| arg.help("SSH 用户名"))
                         .mut_arg("port", |arg| arg.help("端口，默认 22"))
-                        .mut_arg("password", |arg| {
-                            arg.help("登录密码；留空则走交互式输入")
-                        })
+                        .mut_arg("password", |arg| arg.help("登录密码；留空则走交互式输入"))
                         .mut_arg("key", |arg| arg.help("私钥路径，默认 ~/.ssh/id_ed25519"))
                         .mut_arg("desc", |arg| arg.help("连接描述"))
                 })

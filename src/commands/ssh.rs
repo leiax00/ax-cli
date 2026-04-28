@@ -149,7 +149,11 @@ fn select_with_fzf(map: &SshHostMap) -> Result<Option<String>> {
                 e.host,
                 e.port,
                 e.auth.as_str(),
-                if e.desc.is_empty() { String::new() } else { e.desc.clone() }
+                if e.desc.is_empty() {
+                    String::new()
+                } else {
+                    e.desc.clone()
+                }
             )
         })
         .collect();

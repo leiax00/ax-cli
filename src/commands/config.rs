@@ -498,10 +498,8 @@ mod tests {
     fn init_force_overwrites_existing_package_list() {
         let _guard = env_lock().lock().unwrap();
         let original = std::env::var("AX_CONFIG_DIR").ok();
-        let temp = std::env::temp_dir().join(format!(
-            "ax-cli-init-force-test-{}",
-            std::process::id()
-        ));
+        let temp =
+            std::env::temp_dir().join(format!("ax-cli-init-force-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&temp);
 
         std::env::set_var("AX_CONFIG_DIR", &temp);

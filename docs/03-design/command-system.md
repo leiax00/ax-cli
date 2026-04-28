@@ -132,6 +132,21 @@ portal() {
 
 这种方式确保 `cd` 等内置命令在当前 shell 上下文执行。
 
+### 参数透传
+
+自定义命令支持把调用时的额外参数继续传给原命令。
+
+- 如果命令内容里没有显式写 `$@`，系统默认把 `"$@"` 追加到命令末尾
+- 如果命令内容里已经包含 `$@`，则按用户写定的位置展开
+
+示例：
+
+```bash
+ax add cc claude
+cc --settings xxx
+ax run cc -- --settings xxx
+```
+
 ### 自动更新
 
 `ax add`、`ax edit`、`ax rm` 执行后会自动调用 `generate_command_functions()` 更新函数文件。

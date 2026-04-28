@@ -108,8 +108,8 @@ fn main() -> Result<()> {
         Some(cli::Commands::Rm { name }) => {
             commands::rm::execute(&name, &config)?;
         }
-        Some(cli::Commands::Run { name }) => {
-            commands::run::execute(name.as_deref(), &config)?;
+        Some(cli::Commands::Run { name, args }) => {
+            commands::run::execute(name.as_deref(), &args, &config)?;
         }
         Some(cli::Commands::Link) => {
             commands::link::execute(&config)?;
@@ -184,7 +184,7 @@ fn main() -> Result<()> {
             commands::info::execute(&config)?;
         }
         None => {
-            commands::run::execute(None, &config)?;
+            commands::run::execute(None, &[], &config)?;
         }
     }
 

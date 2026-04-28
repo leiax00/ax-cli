@@ -1,8 +1,8 @@
-use crate::config::{load_all_commands, Config};
+use crate::config::{command_with_forwarded_args, load_all_commands, Config};
 use anyhow::{bail, Result};
 use std::io::Write;
 
-pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
+pub fn execute(name: Option<&str>, args: &[String], config: &Config) -> Result<()> {
     let map = load_all_commands(config)?;
 
     match name {
@@ -11,7 +11,9 @@ pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
                 println!("▶ {}", entry.cmd);
                 std::process::Command::new("sh")
                     .arg("-c")
-                    .arg(&entry.cmd)
+                    .arg(command_with_forwarded_args(&entry.cmd))
+                    .arg("ax-run")
+                    .args(args)
                     .status()?;
             } else {
                 bail!("❌ 未找到: {n}");
@@ -54,13 +56,17 @@ pub fn execute(name: Option<&str>, config: &Config) -> Result<()> {
                     println!("▶ {}", entry.cmd);
                     std::process::Command::new("sh")
                         .arg("-c")
-                        .arg(&entry.cmd)
+                        .arg(command_with_forwarded_args(&entry.cmd))
+                        .arg("ax-run")
+                        .args(args)
                         .status()?;
                 } else if let Some(entry) = map.get(input) {
                     println!("▶ {}", entry.cmd);
                     std::process::Command::new("sh")
                         .arg("-c")
-                        .arg(&entry.cmd)
+                        .arg(command_with_forwarded_args(&entry.cmd))
+                        .arg("ax-run")
+                        .args(args)
                         .status()?;
                 } else {
                     bail!("❌ 无效选择: {input}");
