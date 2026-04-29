@@ -93,6 +93,7 @@ ax install                       # 安装 core 包 + 工具 + 配置部署
 ax install --extras              # 额外安装开发增强包
 ax push / pull                   # 配置同步快捷方式
 ax proxy on/off/status           # 代理管理（加载 ax shell 配置后可直接生效）
+ax proxy set-default <addr>      # 设置默认代理地址
 ax completion bash/zsh/powershell # 安装 shell 补全
 ax info                          # 查看当前配置
 ```

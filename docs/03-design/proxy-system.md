@@ -9,15 +9,18 @@
 ```yaml
 # config.yaml
 proxy:
-  host: "127.0.0.1"
-  port: "7890"
+  address: "http://127.0.0.1:7890"
+  no_proxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local"
 ```
 
 ## 命令行为
 
 ### `ax proxy on`
 
-根据当前 shell 类型输出代理设置命令：
+根据当前 shell 类型输出代理设置命令。
+
+- 传入 `addr` 时优先使用命令参数
+- 未传入时读取 `config.proxy.address` 作为默认代理地址
 
 - **bash/zsh**：
   ```bash
@@ -37,13 +40,21 @@ proxy:
   set https_proxy=http://127.0.0.1:7890
   ```
 
+### `ax proxy set-default <addr>`
+
+将默认代理地址持久化写回 `config.yaml` 的 `proxy.address`。设置完成后可直接执行：
+
+```bash
+ax proxy on
+```
+
 ### `ax proxy off`
 
 输出清除代理的命令（unset 或设置为空）。
 
 ### `ax proxy status`
 
-显示当前代理配置（host:port）和状态。
+显示当前 shell 的代理状态，以及 `config.yaml` 中保存的默认代理地址。
 
 ## Shell 检测
 

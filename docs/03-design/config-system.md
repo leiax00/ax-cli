@@ -72,8 +72,8 @@ commands:
     desc: "示例命令"
 
 proxy:
-  host: "127.0.0.1"
-  port: "7890"
+  address: "http://127.0.0.1:7890"
+  no_proxy: "localhost,127.0.0.1"
 ```
 
 ## 命令存储结构 (CommandEntry)

@@ -205,6 +205,11 @@ pub enum ProxyAction {
         #[arg()]
         addr: Option<String>,
     },
+    /// 设置默认代理地址
+    SetDefault {
+        /// 默认代理地址，例如 http://127.0.0.1:7890
+        addr: String,
+    },
     /// 关闭代理（bash/zsh: eval "$(ax proxy off)"）
     Off,
     /// 显示代理状态
@@ -579,6 +584,12 @@ fn localize_en(cmd: Command) -> Command {
                     c.about("Enable proxy").mut_arg("addr", |arg| {
                         arg.help("Proxy address; defaults to configured value")
                     })
+                })
+                .mut_subcommand("set-default", |c| {
+                    c.about("Set the default proxy address")
+                        .mut_arg("addr", |arg| {
+                            arg.help("Default proxy address, for example http://127.0.0.1:7890")
+                        })
                 })
                 .mut_subcommand("off", |c| c.about("Disable proxy"))
                 .mut_subcommand("status", |c| c.about("Show proxy status"))

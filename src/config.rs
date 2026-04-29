@@ -335,6 +335,73 @@ pub fn save_ssh_hosts(map: &SshHostMap) -> Result<()> {
     Ok(())
 }
 
+/// 更新主配置中的默认代理地址
+pub fn save_proxy_address(address: &str) -> Result<()> {
+    let path = main_config_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let mut root = if path.exists() {
+        let content = std::fs::read_to_string(&path)?;
+        serde_yaml::from_str::<serde_yaml::Value>(&content).unwrap_or(serde_yaml::Value::Mapping(
+            serde_yaml::Mapping::new(),
+        ))
+    } else {
+        serde_yaml::Value::Mapping(serde_yaml::Mapping::new())
+    };
+
+    let root_map = match &mut root {
+        serde_yaml::Value::Mapping(map) => map,
+        _ => {
+            root = serde_yaml::Value::Mapping(serde_yaml::Mapping::new());
+            match &mut root {
+                serde_yaml::Value::Mapping(map) => map,
+                _ => unreachable!(),
+            }
+        }
+    };
+
+    let proxy_key = serde_yaml::Value::String("proxy".into());
+    let address_key = serde_yaml::Value::String("address".into());
+
+    let proxy_value = root_map
+        .entry(proxy_key)
+        .or_insert_with(|| serde_yaml::Value::Mapping(serde_yaml::Mapping::new()));
+
+    match proxy_value {
+        serde_yaml::Value::Mapping(proxy_map) => {
+            proxy_map.insert(address_key, serde_yaml::Value::String(address.to_string()));
+        }
+        _ => {
+            let mut proxy_map = serde_yaml::Mapping::new();
+            proxy_map.insert(address_key, serde_yaml::Value::String(address.to_string()));
+            *proxy_value = serde_yaml::Value::Mapping(proxy_map);
+        }
+    }
+
+    let content = serde_yaml::to_string(&root)?;
+    std::fs::write(path, content)?;
+    Ok(())
+}
+
+/// 获取当前应写入的主配置文件路径
+fn main_config_path() -> PathBuf {
+    if let Ok(env_dir) = std::env::var("AX_CONFIG_DIR") {
+        return expand_home(&env_dir).join("config.yaml");
+    }
+
+    if let Some(bin_dir) = binary_dir() {
+        let portable_dir = bin_dir.join("config");
+        let portable_file = bin_dir.join("config.yaml");
+        if portable_file.exists() || portable_dir.is_dir() {
+            return portable_file;
+        }
+    }
+
+    config_dir().join("config.yaml")
+}
+
 // ============ 配置目录 ============
 
 /// 获取 ax-cli 配置根目录

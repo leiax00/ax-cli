@@ -55,6 +55,7 @@ ax env resume --tag aws   # 恢复
 > 作为开发者，我需要在不同网络环境间切换代理。
 
 ```bash
+ax proxy set-default http://127.0.0.1:7890
 ax proxy on     # 启用代理
 ax proxy off    # 关闭代理
 ax proxy status # 查看状态

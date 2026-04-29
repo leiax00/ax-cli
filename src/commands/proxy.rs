@@ -2,7 +2,7 @@ use std::io::{self, IsTerminal};
 
 use anyhow::Result;
 
-use crate::config::Config;
+use crate::config::{save_proxy_address, Config};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum ShellType {
@@ -26,6 +26,10 @@ pub fn execute(action: &crate::cli::ProxyAction, config: &Config) -> Result<()> 
                 print!("{}", render_on_script(shell_type, proxy_addr, no_proxy));
             }
         }
+        crate::cli::ProxyAction::SetDefault { addr } => {
+            save_proxy_address(addr)?;
+            println!("✅ 默认代理已设置: {addr}");
+        }
         crate::cli::ProxyAction::Off => {
             if interactive_stdout {
                 print_apply_hint(shell_type, false, "");
@@ -41,6 +45,7 @@ pub fn execute(action: &crate::cli::ProxyAction, config: &Config) -> Result<()> 
             } else {
                 println!("🔴 Proxy: OFF");
             }
+            println!("⚙️  Default: {}", config.proxy.address);
         }
     }
     Ok(())
