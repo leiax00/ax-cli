@@ -335,53 +335,50 @@ pub fn save_ssh_hosts(map: &SshHostMap) -> Result<()> {
     Ok(())
 }
 
-/// 更新主配置中的默认代理地址
+/// 更新主配置中的默认代理地址（文本替换，保留注释和格式）
 pub fn save_proxy_address(address: &str) -> Result<()> {
+    use regex::Regex;
+
     let path = main_config_path();
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
 
-    let mut root = if path.exists() {
-        let content = std::fs::read_to_string(&path)?;
-        serde_yaml::from_str::<serde_yaml::Value>(&content).unwrap_or(serde_yaml::Value::Mapping(
-            serde_yaml::Mapping::new(),
-        ))
-    } else {
-        serde_yaml::Value::Mapping(serde_yaml::Mapping::new())
-    };
+    let escaped = address.replace('\\', "\\\\").replace('"', "\\\"");
 
-    let root_map = match &mut root {
-        serde_yaml::Value::Mapping(map) => map,
-        _ => {
-            root = serde_yaml::Value::Mapping(serde_yaml::Mapping::new());
-            match &mut root {
-                serde_yaml::Value::Mapping(map) => map,
-                _ => unreachable!(),
-            }
-        }
-    };
-
-    let proxy_key = serde_yaml::Value::String("proxy".into());
-    let address_key = serde_yaml::Value::String("address".into());
-
-    let proxy_value = root_map
-        .entry(proxy_key)
-        .or_insert_with(|| serde_yaml::Value::Mapping(serde_yaml::Mapping::new()));
-
-    match proxy_value {
-        serde_yaml::Value::Mapping(proxy_map) => {
-            proxy_map.insert(address_key, serde_yaml::Value::String(address.to_string()));
-        }
-        _ => {
-            let mut proxy_map = serde_yaml::Mapping::new();
-            proxy_map.insert(address_key, serde_yaml::Value::String(address.to_string()));
-            *proxy_value = serde_yaml::Value::Mapping(proxy_map);
-        }
+    if !path.exists() {
+        let content = format!("proxy:\n  address: \"{escaped}\"\n");
+        std::fs::write(&path, content)?;
+        return Ok(());
     }
 
-    let content = serde_yaml::to_string(&root)?;
-    std::fs::write(path, content)?;
+    let content = std::fs::read_to_string(&path)?;
+
+    // 匹配 proxy: 块中已有的 address 行并替换值
+    let re = Regex::new(r#"(?m)^(\s*address:\s*)"[^"]*""#)?;
+    if re.is_match(&content) {
+        let replacement = format!(r#"$1"{escaped}""#);
+        let new_content = re.replace(&content, replacement.as_str());
+        std::fs::write(&path, new_content.as_ref())?;
+        return Ok(());
+    }
+
+    // proxy: 块存在但无 address 行 — 在 proxy: 后插入
+    let re_proxy = Regex::new(r"(?m)(^proxy:\s*\n)")?;
+    if re_proxy.is_match(&content) {
+        let replacement = format!("$1  address: \"{escaped}\"\n");
+        let new_content = re_proxy.replace(&content, replacement.as_str());
+        std::fs::write(&path, new_content.as_ref())?;
+        return Ok(());
+    }
+
+    // proxy 块完全不存在 — 追加到文件末尾
+    let mut new_content = content;
+    if !new_content.ends_with('\n') {
+        new_content.push('\n');
+    }
+    new_content.push_str(&format!("proxy:\n  address: \"{escaped}\"\n"));
+    std::fs::write(&path, new_content)?;
     Ok(())
 }
 

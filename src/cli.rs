@@ -426,6 +426,10 @@ fn localize_zh(cmd: Command) -> Command {
                     c.about("开启代理")
                         .mut_arg("addr", |arg| arg.help("代理地址，留空则使用配置中的地址"))
                 })
+                .mut_subcommand("set-default", |c| {
+                    c.about("设置默认代理地址")
+                        .mut_arg("addr", |arg| arg.help("默认代理地址，例如 http://127.0.0.1:7890"))
+                })
                 .mut_subcommand("off", |c| c.about("关闭代理"))
                 .mut_subcommand("status", |c| c.about("显示代理状态"))
         })
