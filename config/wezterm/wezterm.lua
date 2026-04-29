@@ -94,6 +94,9 @@ config.keys = {
   -- 窗口
   { key = 'F11', mods = 'NONE', action = act.EmitEvent 'toggle_maximize' },
 
+  -- 标签页列表（类似 tmux prefix + w）
+  { key = 'w', mods = 'LEADER', action = act.ShowLauncherArgs { flags = 'FUZZY|TABS' } },
+
   -- 重载配置
   { key = 'r', mods = 'LEADER', action = act.ReloadConfiguration },
 }

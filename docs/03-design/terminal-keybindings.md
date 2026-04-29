@@ -32,6 +32,7 @@ Leader 键：`Ctrl+Q`，超时 5000ms。
 | `Ctrl+Shift+Tab` | 上一个 tab | 直接绑定 |
 | `Ctrl+1` ~ `Ctrl+5` | 跳转 tab 1-5 | 直接绑定 |
 | `Leader + ,` | 重命名当前 tab | 交互式输入 |
+| `Leader + w` | Tab 列表选择器 | 模糊搜索，类似 tmux `prefix + w` |
 
 ### Pane 管理（Leader 后按，无 tmux 时使用）
 
