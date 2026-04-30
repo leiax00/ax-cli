@@ -66,6 +66,35 @@ pub fn packages_file() -> String {
     }
 }
 
+/// 检测当前显示服务器类型 (wayland, x11, unknown)
+pub fn display_server() -> &'static str {
+    detect_display_server(
+        std::env::var("XDG_SESSION_TYPE").ok().as_deref(),
+        std::env::var("WAYLAND_DISPLAY").ok().as_deref(),
+        std::env::var("DISPLAY").ok().as_deref(),
+    )
+}
+
+fn detect_display_server(
+    session_type: Option<&str>,
+    wayland_display: Option<&str>,
+    display: Option<&str>,
+) -> &'static str {
+    match session_type {
+        Some("wayland") => return "wayland",
+        Some("x11") => return "x11",
+        _ => {}
+    }
+
+    if wayland_display.is_some_and(|value| !value.is_empty()) {
+        return "wayland";
+    }
+    if display.is_some_and(|value| !value.is_empty()) {
+        return "x11";
+    }
+    "unknown"
+}
+
 /// 检查包是否已安装
 pub fn is_package_installed(pkg: &str) -> bool {
     match pkg_manager() {
@@ -86,5 +115,30 @@ pub fn is_package_installed(pkg: &str) -> bool {
             .unwrap_or(false),
         "brew" => which::which(pkg).is_ok(),
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::detect_display_server;
+
+    #[test]
+    fn prefers_explicit_session_type() {
+        assert_eq!(
+            detect_display_server(Some("wayland"), Some(":1"), Some(":0")),
+            "wayland"
+        );
+        assert_eq!(detect_display_server(Some("x11"), Some(":1"), Some(":0")), "x11");
+    }
+
+    #[test]
+    fn falls_back_when_session_type_is_unknown() {
+        assert_eq!(detect_display_server(Some("tty"), Some(":1"), Some(":0")), "wayland");
+        assert_eq!(detect_display_server(Some("tty"), None, Some(":0")), "x11");
+    }
+
+    #[test]
+    fn ignores_empty_display_values() {
+        assert_eq!(detect_display_server(Some("tty"), Some(""), Some("")), "unknown");
     }
 }

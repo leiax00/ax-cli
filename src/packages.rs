@@ -47,6 +47,10 @@ pub fn check_and_install(config: &Config, include_extras: bool) -> Result<()> {
 }
 
 fn parse_packages(content: &str, include_extras: bool) -> Vec<String> {
+    parse_packages_for_display(content, include_extras, detect::display_server())
+}
+
+fn parse_packages_for_display(content: &str, include_extras: bool, display_server: &str) -> Vec<String> {
     let mut packages = Vec::new();
     let mut section = PackageSection::Legacy;
 
@@ -70,10 +74,24 @@ fn parse_packages(content: &str, include_extras: bool) -> Vec<String> {
             continue;
         }
 
-        packages.push(line.to_string());
+        if let Some(pkg) = evaluate_conditional(line, display_server) {
+            packages.push(pkg);
+        }
     }
 
     packages
+}
+
+fn evaluate_conditional(line: &str, display_server: &str) -> Option<String> {
+    if let Some(rest) = line.strip_prefix("@if-wayland:") {
+        let pkg = rest.trim().to_string();
+        return if display_server == "wayland" { Some(pkg) } else { None };
+    }
+    if let Some(rest) = line.strip_prefix("@if-x11:") {
+        let pkg = rest.trim().to_string();
+        return if display_server == "x11" { Some(pkg) } else { None };
+    }
+    Some(line.to_string())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -119,7 +137,7 @@ fn install_packages(pkgs: &[String]) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_packages;
+    use super::{parse_packages, parse_packages_for_display};
 
     #[test]
     fn parses_core_only_when_extras_disabled() {
@@ -133,5 +151,41 @@ mod tests {
         let content = "[core]\ngit\ncurl\n[extras]\nfzf\nbat\n";
         let pkgs = parse_packages(content, true);
         assert_eq!(pkgs, vec!["git", "curl", "fzf", "bat"]);
+    }
+
+    #[test]
+    fn conditional_wayland_included_on_wayland() {
+        let pkg = super::evaluate_conditional("@if-wayland: wl-clipboard", "wayland");
+        assert_eq!(pkg, Some("wl-clipboard".to_string()));
+        let pkg = super::evaluate_conditional("@if-x11: xclip", "wayland");
+        assert_eq!(pkg, None);
+    }
+
+    #[test]
+    fn conditional_x11_included_on_x11() {
+        let pkg = super::evaluate_conditional("@if-wayland: wl-clipboard", "x11");
+        assert_eq!(pkg, None);
+        let pkg = super::evaluate_conditional("@if-x11: xclip", "x11");
+        assert_eq!(pkg, Some("xclip".to_string()));
+    }
+
+    #[test]
+    fn parse_packages_skips_conditionals_for_unknown_display() {
+        let content = "[extras]\n@if-wayland: wl-clipboard\n@if-x11: xclip\ntmux\n";
+        let pkgs = parse_packages_for_display(content, true, "unknown");
+        assert_eq!(pkgs, vec!["tmux"]);
+    }
+
+    #[test]
+    fn parse_packages_includes_only_matching_conditional() {
+        let content = "[extras]\n@if-wayland: wl-clipboard\n@if-x11: xclip\ntmux\n";
+        assert_eq!(
+            parse_packages_for_display(content, true, "wayland"),
+            vec!["wl-clipboard", "tmux"]
+        );
+        assert_eq!(
+            parse_packages_for_display(content, true, "x11"),
+            vec!["xclip", "tmux"]
+        );
     }
 }

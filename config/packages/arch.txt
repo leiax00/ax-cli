@@ -16,4 +16,5 @@ ripgrep
 fd
 bat
 tmux
-wl-clipboard
+@if-wayland: wl-clipboard
+@if-x11: xclip
