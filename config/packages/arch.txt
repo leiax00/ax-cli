@@ -16,3 +16,4 @@ ripgrep
 fd
 bat
 tmux
+wl-clipboard
